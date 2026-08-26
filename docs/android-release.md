@@ -197,10 +197,17 @@ release ビルドは R8 の圧縮・難読化（`isMinifyEnabled = true`）が�
 - 予定をタップして編集・削除できる
 - アプリを終了して再起動しても予定が残っている（`load_app_file` / `save_app_file` が動いている）
 
+ウィジェット（[tech-decisions/android-widget.md](./tech-decisions/android-widget.md)）も見る。Glance は Compose を通るので、R8 で壊れると「Can't show content」になる。
+
+- ホーム画面の長押し → ウィジェット → 「時間割」を置ける
+- 置いたウィジェットに週グリッドと予定が出る
+- ウィジェットをタップするとアプリが開く
+- アプリで予定を編集してホームに戻ると、ウィジェットの内容が変わる
+
 落ちたときはログを見る。
 
 ```powershell
-adb logcat -s RustStdoutStderr Tauri AndroidRuntime
+adb logcat -s RustStdoutStderr Tauri AndroidRuntime GlanceAppWidget
 ```
 
 ## バージョンを上げる

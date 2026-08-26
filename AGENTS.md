@@ -12,10 +12,16 @@
 
 ## 現状スコープ
 
-- **時間割**（週グリッドでの予定の追加・編集・削除・ローカル保存）のみを実装対象とする
+- **時間割**（週グリッドでの予定の追加・編集・削除・ローカル保存）と **Android ホーム画面ウィジェット**（閲覧のみ）を実装対象とする
 - UI は **週表示 / 予定の作成・編集** を中心にする
 - 週送り・月表示・通知・クラウド同期などは、明示的な依頼があるまで追加しない
 - 詳細は `docs/spec.md` を正とする
+
+## Android ネイティブ
+
+- ウィジェットは Kotlin（Jetpack Glance）で `src-tauri/gen/android/app/src/main/java/com/tenta/timetable/widget/` に置く
+- `src-tauri/gen/android` は Tauri の生成物だが手書きコードを含む。`pnpm tauri android init` を再実行してはならない
+- Glance の制約（1 コンテナ子要素 10 個まで、lazy の入れ子不可）と更新の仕組みは `docs/tech-decisions/android-widget.md` を正とする
 
 ## コード規約（要点）
 

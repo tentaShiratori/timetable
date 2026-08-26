@@ -4,6 +4,8 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    // Glance ウィジェットのためだけに Compose コンパイラを使う
+    id("org.jetbrains.kotlin.plugin.compose")
     id("rust")
 }
 
@@ -24,6 +26,7 @@ android {
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
         create("release") {
@@ -65,6 +68,7 @@ android {
     }
     buildFeatures {
         buildConfig = true
+        compose = true
     }
 }
 
@@ -78,9 +82,14 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.lifecycle:lifecycle-process:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    // ウィジェットの検証はエミュレータ上で行う。詳細は docs/tech-decisions/widget-testing.md
+    androidTestImplementation("androidx.glance:glance-testing:1.1.1")
+    androidTestImplementation("androidx.glance:glance-appwidget-testing:1.1.1")
 }
 
 apply(from = "tauri.build.gradle.kts")

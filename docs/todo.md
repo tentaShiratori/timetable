@@ -1,6 +1,6 @@
-# 実装 TODO（v0.1）
+# 実装 TODO
 
-仕様は [spec.md](./spec.md)、週グリッドの描画方針は [tech-decisions/calendar-display.md](./tech-decisions/calendar-display.md)。
+仕様は [spec.md](./spec.md)、週グリッドの描画方針は [tech-decisions/calendar-display.md](./tech-decisions/calendar-display.md)、ウィジェットは [tech-decisions/android-widget.md](./tech-decisions/android-widget.md)。
 
 完了したら `- [ ]` を `- [x]` にする。ここに無い機能（週送り、通知、履歴、ドラッグ作成など）は明示依頼があるまでやらない。
 
@@ -48,7 +48,27 @@
 - [x] 作成・編集・削除のコンポーネントテスト
 - [x] 保存・復元（モック I/O）
 
-## やらない（v0.1）
+## 7. ホーム画面ウィジェット
+
+Kotlin は `src-tauri/gen/android/app/src/main/java/com/tenta/timetable/widget/`。
+
+- [x] Glance を使えるようにする（Kotlin 2.0.21 + Compose Compiler プラグイン）
+- [x] `events.json` の読み込みとバリデーション（フロントの `parseEvents` と同じ捨て方）
+- [x] 週グリッドの描画（曜日ヘッダー、時刻軸、6:00〜24:00 の 30 分スロット、重なりの横分割）
+- [x] タップでアプリを開く
+- [x] アプリを離れたとき（`onStop`）に更新する
+- [x] `AndroidManifest.xml` へのレシーバ登録と `appwidget-provider` の定義
+- [x] エミュレータで配置・描画・タップ・更新を確認
+
+## やらない（ウィジェット）
+
+- ウィジェット上での予定の作成・編集・削除
+- 定期更新（`updatePeriodMillis`）
+- 30 分に乗らない予定の正確な高さ表示
+- 表示する時間帯を予定に合わせて自動で縮める
+- ロック画面ウィジェット、Wear OS タイル
+
+## やらない（アプリ本体）
 
 - ドラッグで範囲指定して作成
 - 週送り・今日へジャンプ・現在時刻ライン

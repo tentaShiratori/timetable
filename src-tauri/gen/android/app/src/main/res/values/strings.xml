@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">"Timetable"</string>
     <string name="main_activity_title">"Timetable"</string>
+    <string name="widget_label">"時間割"</string>
+    <string name="widget_description">"月〜日の時間割をホーム画面に表示します"</string>
 </resources>
