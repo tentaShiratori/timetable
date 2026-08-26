@@ -42,6 +42,15 @@ body {
   display: flex;
   flex-direction: column;
   background: radial-gradient(ellipse 80% 40% at 50% -10%, #c5ece6 0%, transparent 55%), var(--bg);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.app-loading {
+  margin: auto;
+  color: var(--ink-muted);
 }
 
 .week-screen {
@@ -63,4 +72,165 @@ body {
   .week-screen {
     padding: 0.75rem 0.5rem 1rem;
   }
+}
+
+.week-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin-top: 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.week-header,
+.week-body {
+  display: grid;
+  grid-template-columns: 2.5rem repeat(7, minmax(0, 1fr));
+}
+
+.week-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+
+.week-header-time,
+.week-day-header {
+  padding: 0.45rem 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.week-day-header:nth-child(7) {
+  color: var(--accent);
+}
+
+.week-day-header:nth-child(8) {
+  color: var(--event-coral);
+}
+
+.week-times,
+.week-day-col {
+  position: relative;
+}
+
+.week-time-slot,
+.week-slot {
+  border: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.week-time-slot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0.1rem 0.2rem 0 0;
+  font-size: 0.65rem;
+  color: var(--ink-muted);
+}
+
+.week-slot {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+}
+
+.week-slot:nth-child(even) {
+  background: rgba(15, 118, 110, 0.04);
+}
+
+.week-event {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  border: none;
+  border-radius: 4px;
+  padding: 0.1rem 0.25rem;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.event-edit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem 0.75rem 1.25rem;
+}
+
+.event-edit h1 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.event-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.event-edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.event-edit-form input,
+.event-edit-form select,
+.event-edit-form textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font: inherit;
+}
+
+.event-edit-errors {
+  margin: 0;
+  padding: 0.75rem 0.75rem 0.75rem 1.4rem;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.event-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.event-edit-actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+}
+
+.event-edit-actions button[type="button"] {
+  background: var(--ink-muted);
+}
+
+.event-edit-delete {
+  background: var(--event-coral) !important;
 }

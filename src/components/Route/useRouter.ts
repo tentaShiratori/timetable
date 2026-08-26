@@ -16,7 +16,7 @@ export const useRouter = () => {
       path: history[0],
       history,
       back: () => {
-        setHistory(history.slice(1));
+        setHistory(history.length > 1 ? history.slice(1) : ["/"]);
       },
       push: (path: string) => {
         setHistory([path, ...history]);

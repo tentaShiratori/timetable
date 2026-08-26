@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-load-app-file"
+description = "アプリデータから JSON ファイルを読む"
+commands.allow = ["load_app_file"]
+
+[[permission]]
+identifier = "allow-save-app-file"
+description = "アプリデータへ JSON ファイルを書く"
+commands.allow = ["save_app_file"]
