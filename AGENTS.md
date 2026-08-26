@@ -6,6 +6,7 @@
 
 - 仕様は `docs/` にまとめる。機能追加・変更時は該当ドキュメントを更新する
 - 実装の進め方は `docs/todo.md` を正とする
+- コードの書き方は `docs/CODE_CONVENTION.md` を正とする
 - 技術選定の比較・判断は `docs/tech-decisions/` に書く
 - ユーザー向けの概要・起動方法は `README.md` に書く
 
@@ -15,6 +16,17 @@
 - UI は **週表示 / 予定の作成・編集** を中心にする
 - 週送り・月表示・通知・クラウド同期などは、明示的な依頼があるまで追加しない
 - 詳細は `docs/spec.md` を正とする
+
+## コード規約（要点）
+
+詳細は `docs/CODE_CONVENTION.md`。実装時は従う。
+
+- 画面は `src/screens/{Name}/`、再利用 UI は `src/components/{Name}/`。テストは対象の隣
+- ディレクトリをまたぐ export には `/** @public */` が必要（import-lint）
+- コンポーネントは named export の関数宣言。`App` のみ default export
+- 共有状態は jotai（atom は export せずフックだけ出す）。ルーティングは既存の `Route` / `useRouter`
+- テストは `renderApp` と日本語の `it`。実行は `pnpm test run {ファイル名}` のみ
+- ファイルは 300 行以内。スタイルは `App.css` の CSS 変数と kebab-case クラス
 
 ## 技術・運用
 
