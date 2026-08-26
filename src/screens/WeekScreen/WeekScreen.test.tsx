@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { renderApp } from "../../test/renderApp";
 import { appFiles } from "../../test/mocks/tauri";
@@ -27,11 +27,31 @@ describe("WeekScreen", () => {
     const user = userEvent.setup();
     appFiles.set(
       "events",
-      JSON.stringify([{ id: "math", title: "数学", dayOfWeek: 0, startMinutes: 9 * 60, endMinutes: 10 * 60 }]),
+      JSON.stringify([
+        {
+          id: "math",
+          title: "数学",
+          dayOfWeek: 0,
+          startMinutes: 9 * 60,
+          endMinutes: 10 * 60,
+        },
+      ]),
     );
     renderApp(<App />);
     await user.click(await screen.findByRole("button", { name: "数学" }));
     expect(await screen.findByRole("heading", { name: "予定を編集" })).toBeInTheDocument();
     expect(screen.getByLabelText("タイトル")).toHaveValue("数学");
+  });
+  it("今日の曜日がハイライトされる", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-08-26") });
+    renderApp(<App />);
+    expect(await screen.findByText("月")).not.toHaveClass("week-day-header-today");
+    expect(screen.getByText("火")).not.toHaveClass("week-day-header-today");
+    expect(screen.getByText("水")).toHaveClass("week-day-header-today");
+    expect(screen.getByText("木")).not.toHaveClass("week-day-header-today");
+    expect(screen.getByText("金")).not.toHaveClass("week-day-header-today");
+    expect(screen.getByText("土")).not.toHaveClass("week-day-header-today");
+    expect(screen.getByText("日")).not.toHaveClass("week-day-header-today");
+    vi.useRealTimers();
   });
 });

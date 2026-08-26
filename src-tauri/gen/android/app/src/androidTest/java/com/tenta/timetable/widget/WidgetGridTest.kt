@@ -1,6 +1,11 @@
+@file:OptIn(ExperimentalGraphicsApi::class)
+
 package com.tenta.timetable.widget
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -72,5 +77,20 @@ class WidgetGridTest {
   @Test
   fun parseEventsはJSONでない文字列を空として扱う() {
     assertEquals(emptyList<WidgetEvent>(), parseEvents("これはJSONではない"))
+  }
+
+  @Test
+  fun eventColorは開始時刻から色相を決める() {
+    assertEquals(Color.hsl(180f, 0.5f, 0.5f), eventColor(0))
+    assertEquals(Color.hsl(0f, 0.5f, 0.5f), eventColor(6 * 60))
+    assertEquals(Color.hsl(180f, 0.5f, 0.5f), eventColor(12 * 60))
+    assertEquals(Color.hsl(180f, 0.5f, 0.5f), eventColor(24 * 60))
+  }
+
+  @Test
+  fun mondayFirstDayIndexは日曜始まりを月曜始まりに直す() {
+    assertEquals(0, mondayFirstDayIndex(Calendar.MONDAY))
+    assertEquals(5, mondayFirstDayIndex(Calendar.SATURDAY))
+    assertEquals(6, mondayFirstDayIndex(Calendar.SUNDAY))
   }
 }

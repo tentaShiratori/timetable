@@ -16,7 +16,7 @@ androidTestImplementation("androidx.glance:glance-appwidget-testing:1.1.1")
 
 テストは `src-tauri/gen/android/app/src/androidTest/java/com/tenta/timetable/widget/` に置く。
 
-- `WidgetGridTest.kt`: グリッドの範囲、重なりの取り出し、`events.json` のパース
+- `WidgetGridTest.kt`: グリッドの範囲、重なりの取り出し、`events.json` のパース、開始時刻の色、曜日インデックス
 - `TimetableWidgetTest.kt`: Composable が出すノード（時刻ラベル、曜日ヘッダー、予定のタイトル）
 
 ## 実行方法

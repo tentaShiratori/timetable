@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalGraphicsApi::class)
+
 package com.tenta.timetable.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -41,6 +44,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.tenta.timetable.MainActivity
+import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -50,10 +54,11 @@ private val INK = Color(0xFF14323A)
 private val INK_MUTED = Color(0xFF5A7A80)
 private val ACCENT = Color(0xFF0F766E)
 private val CORAL = Color(0xFFF97316)
-private val EVENT_COLORS = listOf(ACCENT, CORAL, Color(0xFFEAB308), Color(0xFF14B8A6))
+private val TODAY_BADGE = Color.hsl(90f, 1f, 0.75f)
 
 private val TIME_COLUMN_WIDTH = 26.dp
-private val HEADER_HEIGHT = 16.dp
+private val HEADER_HEIGHT = 18.dp
+private val TODAY_BADGE_SIZE = 16.dp
 private val SLOT_HEIGHT = 14.dp
 
 private val EVENTS_VERSION_KEY = longPreferencesKey("eventsVersion")
@@ -88,6 +93,7 @@ private suspend fun storeVersion(context: Context, id: GlanceId) {
 @Composable
 internal fun WidgetBody(events: List<WidgetEvent>) {
   val eventsByDay = DAY_LABELS.indices.map { day -> events.filter { it.dayOfWeek == day } }
+  val todayIndex = mondayFirstDayIndex(Calendar.getInstance().get(Calendar.DAY_OF_WEEK))
 
   Column(
     modifier = GlanceModifier
@@ -98,7 +104,7 @@ internal fun WidgetBody(events: List<WidgetEvent>) {
       .padding(4.dp)
       .clickable(actionStartActivity<MainActivity>()),
   ) {
-    DayHeader()
+    DayHeader(todayIndex)
     LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
       items(GRID_SLOT_COUNT) { index ->
         SlotRow(GRID_START_MINUTES + index * SLOT_MINUTES, eventsByDay)
@@ -108,22 +114,45 @@ internal fun WidgetBody(events: List<WidgetEvent>) {
 }
 
 @Composable
-private fun DayHeader() {
+private fun DayHeader(todayIndex: Int) {
   Row(modifier = GlanceModifier.fillMaxWidth().height(HEADER_HEIGHT)) {
     Spacer(modifier = GlanceModifier.width(TIME_COLUMN_WIDTH))
     DAY_LABELS.forEachIndexed { day, label ->
-      Text(
-        text = label,
-        modifier = GlanceModifier.defaultWeight().semantics { testTag = DAY_LABEL_TAG },
-        style = TextStyle(
-          color = ColorProvider(dayLabelColor(day)),
-          fontSize = 9.sp,
-          fontWeight = FontWeight.Bold,
-          textAlign = TextAlign.Center,
-        ),
-      )
+      Box(
+        modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+        contentAlignment = Alignment.Center,
+      ) {
+        if (day == todayIndex) {
+          Box(
+            modifier = GlanceModifier
+              .width(TODAY_BADGE_SIZE)
+              .height(TODAY_BADGE_SIZE)
+              .background(TODAY_BADGE)
+              .cornerRadius(8.dp),
+            contentAlignment = Alignment.Center,
+          ) {
+            DayLabel(day = day, label = label)
+          }
+        } else {
+          DayLabel(day = day, label = label)
+        }
+      }
     }
   }
+}
+
+@Composable
+private fun DayLabel(day: Int, label: String) {
+  Text(
+    text = label,
+    modifier = GlanceModifier.semantics { testTag = DAY_LABEL_TAG },
+    style = TextStyle(
+      color = ColorProvider(dayLabelColor(day)),
+      fontSize = 9.sp,
+      fontWeight = FontWeight.Bold,
+      textAlign = TextAlign.Center,
+    ),
+  )
 }
 
 @Composable
@@ -171,7 +200,10 @@ internal fun DayCell(
   Row(modifier = modifier) {
     events.forEach { event ->
       Box(
-        modifier = GlanceModifier.defaultWeight().fillMaxHeight().background(eventColor(event.id)),
+        modifier = GlanceModifier
+          .defaultWeight()
+          .fillMaxHeight()
+          .background(eventColor(event.startMinutes)),
         contentAlignment = Alignment.CenterStart,
       ) {
         Text(
@@ -193,12 +225,4 @@ private fun dayLabelColor(day: Int): Color = when (day) {
   5 -> ACCENT
   6 -> CORAL
   else -> INK
-}
-
-private fun eventColor(id: String): Color {
-  var hash = 0
-  for (char in id) {
-    hash = (hash + char.code) % EVENT_COLORS.size
-  }
-  return EVENT_COLORS[hash]
 }

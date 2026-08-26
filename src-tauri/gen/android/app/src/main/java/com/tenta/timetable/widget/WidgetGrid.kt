@@ -1,4 +1,10 @@
+@file:OptIn(ExperimentalGraphicsApi::class)
+
 package com.tenta.timetable.widget
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ExperimentalGraphicsApi
+import java.util.Calendar
 
 internal const val SLOT_MINUTES = 30
 internal const val MAX_OVERLAP_COLUMNS = 3
@@ -37,4 +43,18 @@ internal fun formatMinutes(minutes: Int): String {
     return "24:00"
   }
   return "${minutes / 60}:${(minutes % 60).toString().padStart(2, '0')}"
+}
+
+/**
+ * アプリの `eventColor` と同じ。開始時刻から色相を決める。
+ * Compose の HSL は 0..360 なので、CSS が受け付ける 360 超は剰余する。
+ */
+internal fun eventColor(startMinutes: Int): Color {
+  val hue = ((startMinutes.toFloat() / GRID_END_MINUTES) * 720).toInt() + 180
+  return Color.hsl(Math.floorMod(hue, 360).toFloat(), 0.5f, 0.5f)
+}
+
+/** Calendar.DAY_OF_WEEK（日曜=1）を、アプリと同じ月曜始まり 0..6 にする。 */
+internal fun mondayFirstDayIndex(calendarDayOfWeek: Int): Int {
+  return Math.floorMod(calendarDayOfWeek - Calendar.MONDAY, 7)
 }

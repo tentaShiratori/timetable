@@ -8,3 +8,8 @@ export const SLOT_COUNT = (GRID_END_MINUTES - GRID_START_MINUTES) / SLOT_MINUTES
 export function slotStartMinutes(index: number): number {
   return GRID_START_MINUTES + index * SLOT_MINUTES;
 }
+
+export function eventColor(startMinutes: number): string {
+  const colorIndex = Math.floor((startMinutes / GRID_END_MINUTES) * 720) + 180;
+  return `hsl(${colorIndex}deg 50% 50%)`;
+}

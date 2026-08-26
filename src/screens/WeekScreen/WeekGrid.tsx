@@ -1,6 +1,6 @@
+import { useSyncExternalStore } from "react";
 import { DAY_LABELS, formatMinutes, type DayOfWeek, type Event } from "../../components/Event/event";
-import { eventColor } from "./eventColor";
-import { SLOT_COUNT, SLOT_HEIGHT_PX, slotStartMinutes } from "./grid";
+import { eventColor, SLOT_COUNT, SLOT_HEIGHT_PX, slotStartMinutes } from "./grid";
 import { layoutDayEvents } from "./layout";
 
 type WeekGridProps = {
@@ -9,16 +9,26 @@ type WeekGridProps = {
   onEventClick: (id: string) => void;
 };
 
+const dayStore = {
+  subscribe: () => {
+    const timer = setInterval(() => {}, 30 * 60);
+    return () => clearInterval(timer);
+  },
+  getSnapshot: () => {
+    return new Date().getDay();
+  },
+};
 export function WeekGrid({ events, onSlotClick, onEventClick }: WeekGridProps) {
   const bodyHeight = SLOT_COUNT * SLOT_HEIGHT_PX;
+  const day = useSyncExternalStore(dayStore.subscribe, dayStore.getSnapshot);
 
   return (
     <div className="week-scroll">
       <div className="week-header">
         <div className="week-header-time" />
-        {DAY_LABELS.map((label) => (
+        {DAY_LABELS.map((label, index) => (
           <div key={label} className="week-day-header" role="columnheader">
-            {label}
+            <span className={(index + 1) % 7 === day ? "week-day-header-today" : "week-day-header-label"}>{label}</span>
           </div>
         ))}
       </div>
@@ -89,7 +99,7 @@ function DayColumn({ dayLabel, dayOfWeek, events, bodyHeight, onSlotClick, onEve
             height: block.height,
             left: `calc(${(block.columnIndex / block.columnCount) * 100}% + 1px)`,
             width: `calc(${(1 / block.columnCount) * 100}% - 2px)`,
-            background: eventColor(block.event.id),
+            background: eventColor(block.event.startMinutes),
           }}
           onClick={() => onEventClick(block.event.id)}
         >

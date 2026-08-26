@@ -99,6 +99,20 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.week-day-header-label {
+  display: inline-block;
+  height: 1.5rem;
+  line-height: 1.5rem;
+}
+.week-day-header-today {
+  background-color: hsl(90deg 100% 75%);
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  display: inline-block;
+}
+
 .week-header-time,
 .week-day-header {
   padding: 0.45rem 0.1rem;
@@ -131,7 +145,7 @@ body {
   align-items: flex-start;
   justify-content: flex-end;
   padding: 0.1rem 0.2rem 0 0;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--ink-muted);
 }
 
@@ -158,7 +172,7 @@ body {
   font-weight: 700;
   line-height: 1.2;
   text-align: left;
-  white-space: nowrap;
+  text-wrap: nowrap;
   text-overflow: ellipsis;
 }
 
