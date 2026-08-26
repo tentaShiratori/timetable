@@ -22,7 +22,9 @@
 
 1. `isPermissionGranted` / 未許可なら `requestPermission`（Android 13+ の `POST_NOTIFICATIONS`）
 2. `createChannel`（Android 8+。チャンネルが無いと出ない）
-3. `cancelAll` のあと、現行の予定ごとに `sendNotification({ schedule })`
+3. 消えた予定の通知だけ `cancel(ids)` し、現行の予定ごとに `sendNotification({ schedule })`
+
+`cancelAll` は Android で引数なし `cancel` になり、Kotlin の `lateinit var notifications` が初期化されず落ちる（[調査](../invest/notification.md)）。通知 id は予定の UUID から決め、一度使った id は再利用できる。消した予定の id は `cancel` が成功するまで `reminder_ids.json` に残す。
 
 `sendNotification` は注入された `window.Notification` 経由で `plugin:notification|notify` を呼ぶ。`schedule` もそのペイロードに載る。
 
@@ -40,7 +42,7 @@ Doze 中でも 10 分前に近づけたいので `allowWhileIdle: true` にす�
 
 ### 通知の identifer
 
-プラグインは 32-bit 整数の `id` しか受けない。予定の UUID を安定なハッシュにして、同じ予定の再登録で上書きされるようにする。
+プラグインは 32-bit 整数の `id` しか受けない。予定の UUID を安定なハッシュにして、同じ予定の再登録で上書きされるようにする。消した予定の id は `cancel(ids)` が通るまで `reminder_ids.json` に残す。
 
 ## 棄却したもの
 

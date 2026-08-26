@@ -9,7 +9,7 @@ beforeEach(() => {
   notificationMocks.isPermissionGranted.mockReset().mockResolvedValue(false);
   notificationMocks.requestPermission.mockReset().mockResolvedValue("denied");
   notificationMocks.sendNotification.mockReset();
-  notificationMocks.cancelAll.mockReset().mockResolvedValue(undefined);
+  notificationMocks.cancel.mockReset().mockResolvedValue(undefined);
   notificationMocks.createChannel.mockReset().mockResolvedValue(undefined);
 });
 

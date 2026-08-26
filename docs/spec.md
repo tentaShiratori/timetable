@@ -82,3 +82,4 @@ Event {
 - 予定はアプリデータディレクトリの `events.json` に JSON 配列で保存する。起動時に読み込み、追加・更新・削除のたびに全件を書き出す
 - 読み込み時に壊れた行（タイトル空、終了 ≤ 開始など）は捨てる
 - リマインドは Tauri の notification プラグインで、開始の 10 分前に毎週出す。詳細は [tech-decisions/notification.md](./tech-decisions/notification.md)
+- 消した予定の通知 id は `cancel` が通るまで `reminder_ids.json` に残す。`cancelAll` は使わない

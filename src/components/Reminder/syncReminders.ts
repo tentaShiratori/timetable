@@ -1,5 +1,5 @@
 import {
-  cancelAll,
+  cancel,
   createChannel,
   Importance,
   isPermissionGranted,
@@ -10,6 +10,7 @@ import {
 } from "@tauri-apps/plugin-notification";
 import type { Event } from "../Event/event";
 import { REMINDER_CHANNEL_ID, reminderBody, reminderFireAt, reminderNotificationId } from "./reminder";
+import { loadScheduledIds, saveScheduledIds } from "./scheduledIds";
 
 let syncToken = 0;
 
@@ -26,17 +27,33 @@ export async function syncReminders(events: Event[]): Promise<void> {
 }
 
 async function applyReminders(events: Event[], token: number): Promise<void> {
-  if (events.length === 0) {
-    await cancelAll();
+  const storedIds = await loadScheduledIds();
+  if (token !== syncToken) {
     return;
   }
+  const currentIds = events.map((event) => reminderNotificationId(event.id));
+  const currentIdSet = new Set(currentIds);
+  const deletedIds = storedIds.filter((id) => !currentIdSet.has(id));
+  // 削除されたイベントの通知をcancelし、cancelに失敗したらidを残しておく
+  const leftoverDeleted = await cancelDeletedIds(deletedIds);
+  if (token !== syncToken) {
+    return;
+  }
+
+  if (events.length === 0) {
+    await saveScheduledIds(leftoverDeleted);
+    return;
+  }
+
   let granted = await isPermissionGranted();
   if (!granted) {
     granted = (await requestPermission()) === "granted";
   }
   if (!granted || token !== syncToken) {
+    await saveScheduledIds([...leftoverDeleted, ...storedIds.filter((id) => currentIdSet.has(id))]);
     return;
   }
+
   await createChannel({
     id: REMINDER_CHANNEL_ID,
     name: "予定のリマインド",
@@ -45,7 +62,9 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
     visibility: Visibility.Private,
     vibration: true,
   });
-  await cancelAll();
+  if (token !== syncToken) {
+    return;
+  }
   for (const event of events) {
     const fireAt = reminderFireAt(event);
     sendNotification({
@@ -63,5 +82,20 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
         true,
       ),
     });
+  }
+  // 通知に登録してあるイベントをidを保存する
+  await saveScheduledIds([...leftoverDeleted, ...currentIds]);
+}
+
+async function cancelDeletedIds(deletedIds: number[]): Promise<number[]> {
+  if (deletedIds.length === 0) {
+    return [];
+  }
+  try {
+    await cancel(deletedIds);
+    return [];
+  } catch {
+    // cancel できなければ id を残し、次の同期でやり直す
+    return deletedIds;
   }
 }

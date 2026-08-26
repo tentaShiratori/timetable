@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  cancelAll,
+  cancel,
   createChannel,
   isPermissionGranted,
   requestPermission,
@@ -8,6 +8,7 @@ import {
 } from "@tauri-apps/plugin-notification";
 import type { Event } from "../Event/event";
 import { REMINDER_CHANNEL_ID, reminderNotificationId } from "./reminder";
+import { loadScheduledIds } from "./scheduledIds";
 import { syncReminders } from "./syncReminders";
 
 const math: Event = {
@@ -16,6 +17,14 @@ const math: Event = {
   dayOfWeek: 0,
   startMinutes: 9 * 60,
   endMinutes: 10 * 60,
+};
+
+const english: Event = {
+  id: "english",
+  title: "英語",
+  dayOfWeek: 1,
+  startMinutes: 10 * 60,
+  endMinutes: 11 * 60,
 };
 
 function enableTauri(): void {
@@ -38,9 +47,9 @@ describe("syncReminders", () => {
     expect(vi.mocked(sendNotification)).not.toHaveBeenCalled();
   });
 
-  it("予定が空なら pending を全部取り消す", async () => {
+  it("予定が空で保持している id も無ければ cancel しない", async () => {
     await syncReminders([]);
-    expect(vi.mocked(cancelAll)).toHaveBeenCalledOnce();
+    expect(vi.mocked(cancel)).not.toHaveBeenCalled();
     expect(vi.mocked(sendNotification)).not.toHaveBeenCalled();
   });
 
@@ -56,7 +65,7 @@ describe("syncReminders", () => {
     vi.mocked(isPermissionGranted).mockResolvedValue(true);
     await syncReminders([math]);
     expect(vi.mocked(createChannel)).toHaveBeenCalledWith(expect.objectContaining({ id: REMINDER_CHANNEL_ID }));
-    expect(vi.mocked(cancelAll)).toHaveBeenCalledOnce();
+    expect(vi.mocked(cancel)).not.toHaveBeenCalled();
     expect(vi.mocked(sendNotification)).toHaveBeenCalledWith({
       id: reminderNotificationId("math"),
       title: "数学",
@@ -72,5 +81,26 @@ describe("syncReminders", () => {
         every: undefined,
       },
     });
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("math")]);
+  });
+
+  it("消した予定の通知は id 指定で cancel する", async () => {
+    vi.mocked(isPermissionGranted).mockResolvedValue(true);
+    await syncReminders([math, english]);
+    await syncReminders([english]);
+    expect(vi.mocked(cancel)).toHaveBeenCalledWith([reminderNotificationId("math")]);
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("english")]);
+  });
+
+  it("cancel に失敗したら消した予定の id を残す", async () => {
+    vi.mocked(isPermissionGranted).mockResolvedValue(true);
+    await syncReminders([math]);
+    vi.mocked(cancel).mockRejectedValueOnce(new Error("lateinit"));
+    await syncReminders([]);
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("math")]);
+    vi.mocked(cancel).mockResolvedValueOnce(undefined);
+    await syncReminders([]);
+    expect(vi.mocked(cancel)).toHaveBeenLastCalledWith([reminderNotificationId("math")]);
+    expect(await loadScheduledIds()).toEqual([]);
   });
 });
