@@ -1,0 +1,80 @@
+// .importlintrc.jsonc
+//
+// `*.package` 命名規則。カプセル化境界にしたいディレクトリを
+// "foo.package" のように名前付けする（例: "src/auth.package/"、
+// "src/billing.package/"）。`*.package` ディレクトリ内では、深さに
+// 関係なく互いに自由に import できる。外側からは、`@public` タグが
+// 付いた export、または境界自身の index.ts からの再 export
+// （タグなし）以外は import できない。下記の index 抜け穴により、
+// それらの export は親パッケージへ昇格する。素の再 export は
+// `defaultImportability` に戻るため、より広い公開は常に意図的で、
+// 見える形の「1階層ずつの」編集になる。
+//
+// まだリネームしていないディレクトリは影響を受けない。どの境界にも
+// 属さないファイルはプロジェクトルートの1パッケージを共有し、
+// 互いに自由に import できる。既存コードベースへの段階的導入にも、
+// 新規プロジェクトにも使える。境界はディレクトリのリネームを
+// 1つずつ進めていけばよい。
+{
+  // lint 対象を走査するルート。プロジェクトルートからの相対パス。
+  "include": [
+    "."
+  ],
+  // .gitignore に加えて除外する glob。プロジェクトルートからの相対パス。
+  "exclude": [
+    "src/test/**/*",
+    "**/*.test.tsx"
+  ],
+  // tsconfig.json へのパス（resolver の `paths` / `baseUrl` / `customConditions` 用）。
+  // プロジェクトルートからの相対パス。
+  // 存在すればデフォルトは "<project root>/tsconfig.json"。
+  // "tsconfig": "./tsconfig.json",
+  "rules": {
+    "package-access": {
+      // "error" | "warn" | "off"。`off` のルールは検査されない。
+      "severity": "error",
+      // 以下: eslint-plugin-import-access の `import-access/jsdoc` ルールと
+      // 同じオプション名・デフォルト。
+      // "index.{js,ts,jsx,tsx,mjs,cjs,...}" を、パッケージ境界上は
+      // 親ディレクトリが export 元であるかのように扱う。
+      // `*.package` 規則の抜け穴: 境界の index.ts からの素の再 export は、
+      // その export を親パッケージへ昇格させる。
+      "indexLoophole": true,
+      // "foo/bar.ts" を "foo.ts" と同じパッケージ内として扱う
+      // （importer 自身のファイル名ステムに一致する1階層）。
+      // "sub/" ディレクトリの隣に置く "sub.ts" のような
+      // コンパニオンファイルパターン向け。有効にする場合は true。
+      // "filenameLoophole": true,
+      "filenameLoophole": false,
+      // 認識された JSDoc アクセスタグがない export に仮定するアクセスレベル。
+      // "public" | "package" | "private"。"package" にすると、
+      // 各 `*.package` 境界（下記 packageDirectory 参照）がデフォルトで
+      // カプセル化境界になり、JSDoc タグは不要。どの境界にも属さない
+      // ファイルはプロジェクトルートの1パッケージを共有し、互いに自由に
+      // import できる。境界はディレクトリのリネームを1つずつ導入できる。
+      "defaultImportability": "package",
+      // importer 自身のパッケージ名に一致する bare specifier の扱い。
+      // "external"（検査しない）| "internal"（通常どおり検査）。
+      "treatSelfReferenceAs": "external",
+      // export 元ファイルのプロジェクト相対パスに対する glob。
+      // 一致したものはアクセスレベルに関係なく検査しない。
+      "excludeSourcePatterns": [],
+      // 「パッケージ」ディレクトリを示す glob（basename と
+      // プロジェクト相対パスの両方にマッチ）。一致する祖先がないファイルは
+      // 単一のプロジェクトルートパッケージに属する。`!` 付きパターンは
+      // 本来マッチするディレクトリを除外する。下記は `*.package` 命名規則
+      // — 場所ではなく名前で境界になるので、プロジェクトが成長しても
+      // 更新不要。
+      //
+      // 別の規則（どれか1つを代わりに有効化。オプション自体を外すと
+      // すべてのディレクトリが個別パッケージになる）:
+      // "packageDirectory": ["**", "!**/*.internal"],  // 逆命名:
+      //   すべてのディレクトリが境界。".internal" 名だけオプトアウト
+      // "packageDirectory": ["packages/*"],  // 固定配置:
+      //   境界は特定のトップレベル配下に置く（接尾辞ではなく場所で定義）
+      "packageDirectory": [
+        "**/*"
+      ]
+    }
+  }
+}

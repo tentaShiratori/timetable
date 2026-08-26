@@ -1,0 +1,13 @@
+[tools]
+lefthook = "2.1.10"
+node = "25.9.0"
+"npm:@antfu/ni" = "30.3.0"
+"npm:pnpm" = "11.17.0"
+rust = "1.95.0"
+java = "temurin-21"
+
+[env]
+MISE_PIN = 1
+
+[hooks]
+postinstall = "if [ -z \"${CI:-}\" ] && git rev-parse --git-dir > /dev/null 2>&1; then lefthook install; fi"
