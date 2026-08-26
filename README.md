@@ -43,8 +43,11 @@ pnpm tauri android dev
 ## ビルド
 
 ```bash
-pnpm tauri android build
+# 署名付き release APK
+pnpm tauri android build --apk
 ```
+
+初回は署名鍵の作成と Gradle への署名設定が必要です。実機へ入れるまでの手順は [docs/android-release.md](docs/android-release.md) を参照してください。
 
 ## テスト
 
