@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { SubmitEvent, useState } from "react";
 import {
   DAY_LABELS,
   DAY_MINUTES,
@@ -45,7 +45,7 @@ function withCurrent(choices: number[], current: number): number[] {
 }
 
 function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
-  const { events, addEvent, updateEvent, removeEvent } = useEvents();
+  const { events, addEvent, addEvents, updateEvent, removeEvent } = useEvents();
   const router = useRouter();
   const existing = parsed.mode === "edit" ? events.find((event) => event.id === parsed.id) : undefined;
 
@@ -76,8 +76,9 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
 
   const isEdit = parsed.mode === "edit";
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    const isDaily = event.nativeEvent.submitter?.dataset.daily === "true";
     const draft = {
       title,
       dayOfWeek,
@@ -100,6 +101,17 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
     };
     if (isEdit) {
       updateEvent(nextEvent);
+    } else if (isDaily) {
+      const dailyEvents = [nextEvent].concat(
+        [0, 1, 2, 3, 4, 5, 6]
+          .filter((day): day is DayOfWeek => day !== dayOfWeek)
+          .map((day) => ({
+            ...nextEvent,
+            id: crypto.randomUUID(),
+            dayOfWeek: day,
+          })),
+      );
+      addEvents(dailyEvents);
     } else {
       addEvent(nextEvent);
     }
@@ -157,6 +169,11 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
         </label>
         <div className="event-edit-actions">
           <button type="submit">保存</button>
+          {!isEdit ? (
+            <button type="submit" data-daily="true">
+              保存（毎日）
+            </button>
+          ) : null}
           {isEdit ? (
             <button
               type="button"

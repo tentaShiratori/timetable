@@ -10,7 +10,9 @@ const readyAtom = atom(false);
 
 async function loadEventsFile(): Promise<Event[]> {
   try {
-    const raw = await invoke<string | null>("load_app_file", { kind: EVENTS_KIND });
+    const raw = await invoke<string | null>("load_app_file", {
+      kind: EVENTS_KIND,
+    });
     return parseEvents(raw);
   } catch {
     return [];
@@ -19,7 +21,10 @@ async function loadEventsFile(): Promise<Event[]> {
 
 async function saveEventsFile(events: Event[]): Promise<void> {
   try {
-    await invoke("save_app_file", { kind: EVENTS_KIND, contents: JSON.stringify(events) });
+    await invoke("save_app_file", {
+      kind: EVENTS_KIND,
+      contents: JSON.stringify(events),
+    });
   } catch {
     // ブラウザの `pnpm dev` では Tauri が無いので保存しない
   }
@@ -29,6 +34,7 @@ type UseEvents = {
   events: Event[];
   ready: boolean;
   addEvent: (event: Event) => void;
+  addEvents: (events: Event[]) => void;
   updateEvent: (event: Event) => void;
   removeEvent: (id: string) => void;
 };
@@ -60,10 +66,15 @@ export function useEvents(): UseEvents {
   return {
     events,
     ready,
-    addEvent: (event) => {
+    addEvent: async (event) => {
       const next = [...events, event];
       setEvents(next);
-      void saveEventsFile(next);
+      await saveEventsFile(next);
+    },
+    addEvents: async (newEvents) => {
+      const next = [...events, ...newEvents];
+      setEvents(next);
+      await saveEventsFile(next);
     },
     updateEvent: (event) => {
       const next = events.map((item) => (item.id === event.id ? event : item));
