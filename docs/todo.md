@@ -2,7 +2,7 @@
 
 仕様は [spec.md](./spec.md)、週グリッドの描画方針は [tech-decisions/calendar-display.md](./tech-decisions/calendar-display.md)、ウィジェットは [tech-decisions/android-widget.md](./tech-decisions/android-widget.md)。
 
-完了したら `- [ ]` を `- [x]` にする。ここに無い機能（週送り、通知、履歴、ドラッグ作成など）は明示依頼があるまでやらない。
+完了したら `- [ ]` を `- [x]` にする。ここに無い機能（週送り、履歴、ドラッグ作成など）は明示依頼があるまでやらない。
 
 ## 1. 予定データ
 
@@ -68,11 +68,24 @@ Kotlin は `src-tauri/gen/android/app/src/main/java/com/tenta/timetable/widget/`
 - 表示する時間帯を予定に合わせて自動で縮める
 - ロック画面ウィジェット、Wear OS タイル
 
+## 8. リマインド通知
+
+仕様は [spec.md](./spec.md)、実装方針は [tech-decisions/notification.md](./tech-decisions/notification.md)。
+
+- [x] Tauri 公式の notification プラグインを入れる
+- [x] 通知許可を確認・未許可ならリクエストする
+- [x] Android の通知チャンネルを作る
+- [x] 予定の開始 10 分前に毎週通知する（`Schedule.interval`）
+- [x] 予定の追加・更新・削除・起動時に pending を組み直す
+- [x] 開始が 0:00 近い予定は前日 23:50 台に回す
+- [x] ユニットテスト（10 分前の時刻・曜日、プラグイン呼び出し）
+
 ## やらない（アプリ本体）
 
 - ドラッグで範囲指定して作成
 - 週送り・今日へジャンプ・現在時刻ライン
 - 月表示・日表示
-- Google カレンダー連携、通知、クラウド同期
+- Google カレンダー連携、クラウド同期
+- 予定ごとのリマインド ON/OFF や「何分前か」の変更
 - 過去の時間割履歴
 - デスクトップ / iOS 向けの配布

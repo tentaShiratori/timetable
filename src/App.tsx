@@ -1,11 +1,13 @@
 import { useEvents } from "./components/Event/useEvents";
+import { useReminders } from "./components/Reminder/useReminders";
 import { Route } from "./components/Route/Route";
 import { EventEditScreen } from "./screens/EventEditScreen/EventEditScreen";
 import { WeekScreen } from "./screens/WeekScreen/WeekScreen";
 import "./App.css";
 
 function App() {
-  const { ready } = useEvents();
+  const { events, ready } = useEvents();
+  useReminders(events, ready);
 
   if (!ready) {
     return (

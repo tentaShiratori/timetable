@@ -72,7 +72,7 @@ export function WeekScreen() { ... }
 - Vitest + Testing Library。アプリの描画は必ず `renderApp`（jotai の `Provider` 付き）を使う。素の `render` は使わない
 - `describe` / `it` は日本語。ユーザーに見える文言も日本語
 - 操作は `userEvent`。クリック対象は可能な限り `getByRole`
-- Tauri の I/O は `src/test/mocks/tauri.ts` のモックを使う。テストから実ネイティブを叩かない
+- Tauri の I/O は `src/test/mocks/tauri.ts`、通知は `src/test/mocks/notification.ts` のモックを使う。テストから実ネイティブを叩かない
 - 実行は `pnpm test run {ファイル名}` のみ。全テスト一括はしない
 
 ```tsx
@@ -89,7 +89,7 @@ describe("Route", () => {
 ## フロントと Tauri
 
 - ファイルの読み書きは Tauri コマンド経由だけ。フロントから直接ファイルシステムに触れない
-- コマンドを足したら `src/test/mocks/tauri.ts` も同じ契約で更新する
+- コマンドを足したら `src/test/mocks/tauri.ts`、通知プラグインを足したら `src/test/mocks/notification.ts` も同じ契約で更新する
 
 ## やらないこと
 
