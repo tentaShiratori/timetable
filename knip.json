@@ -1,5 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "tags": ["-lintignore"],
+  "tags": ["-public"],
   "ignore": ["src/test/**/*"]
 }
