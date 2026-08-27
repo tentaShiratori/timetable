@@ -19,7 +19,7 @@ describe("WeekScreen", () => {
     renderApp(<App />);
     await user.click(await screen.findByRole("button", { name: "火曜 9:00 に追加" }));
     expect(await screen.findByRole("heading", { name: "予定を追加" })).toBeInTheDocument();
-    expect(screen.getByLabelText("曜日")).toHaveValue("1");
+    expect(screen.getByLabelText("曜日")).toHaveValue("2");
     expect(screen.getByLabelText("開始")).toHaveValue(String(9 * 60));
   });
 
@@ -31,7 +31,7 @@ describe("WeekScreen", () => {
         {
           id: "math",
           title: "数学",
-          dayOfWeek: 0,
+          dayOfWeek: 1,
           startMinutes: 9 * 60,
           endMinutes: 10 * 60,
         },

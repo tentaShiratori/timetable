@@ -6,7 +6,7 @@ function event(overrides: Partial<Event> = {}): Event {
   return {
     id: "math",
     title: "数学",
-    dayOfWeek: 0,
+    dayOfWeek: 1,
     startMinutes: 9 * 60,
     endMinutes: 10 * 60,
     ...overrides,
@@ -19,7 +19,7 @@ describe("reminderFireAt", () => {
   });
 
   it("日曜はプラグインの weekday 1 にする", () => {
-    expect(reminderFireAt(event({ dayOfWeek: 6, startMinutes: 9 * 60 }))).toEqual({
+    expect(reminderFireAt(event({ dayOfWeek: 0, startMinutes: 9 * 60 }))).toEqual({
       weekday: 1,
       hour: 8,
       minute: 50,
@@ -27,12 +27,12 @@ describe("reminderFireAt", () => {
   });
 
   it("0:00を跨ぐときは前日の23:50台にする", () => {
-    expect(reminderFireAt(event({ dayOfWeek: 0, startMinutes: 5 }))).toEqual({
+    expect(reminderFireAt(event({ dayOfWeek: 1, startMinutes: 5 }))).toEqual({
       weekday: 1,
       hour: 23,
       minute: 55,
     });
-    expect(reminderFireAt(event({ dayOfWeek: 6, startMinutes: 5 }))).toEqual({
+    expect(reminderFireAt(event({ dayOfWeek: 0, startMinutes: 5 }))).toEqual({
       weekday: 7,
       hour: 23,
       minute: 55,

@@ -92,8 +92,8 @@ private suspend fun storeVersion(context: Context, id: GlanceId) {
 
 @Composable
 internal fun WidgetBody(events: List<WidgetEvent>) {
-  val eventsByDay = DAY_LABELS.indices.map { day -> events.filter { it.dayOfWeek == day } }
-  val todayIndex = mondayFirstDayIndex(Calendar.getInstance().get(Calendar.DAY_OF_WEEK))
+  val eventsByDay = DAY_LABEL_ORDER.map { dayOfWeek -> events.filter { it.dayOfWeek == dayOfWeek } }
+  val today = toDayOfWeek(Calendar.getInstance().get(Calendar.DAY_OF_WEEK))
 
   Column(
     modifier = GlanceModifier
@@ -104,7 +104,7 @@ internal fun WidgetBody(events: List<WidgetEvent>) {
       .padding(4.dp)
       .clickable(actionStartActivity<MainActivity>()),
   ) {
-    DayHeader(todayIndex)
+    DayHeader(today)
     LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
       items(GRID_SLOT_COUNT) { index ->
         SlotRow(GRID_START_MINUTES + index * SLOT_MINUTES, eventsByDay)
@@ -114,15 +114,16 @@ internal fun WidgetBody(events: List<WidgetEvent>) {
 }
 
 @Composable
-private fun DayHeader(todayIndex: Int) {
+private fun DayHeader(today: Int) {
   Row(modifier = GlanceModifier.fillMaxWidth().height(HEADER_HEIGHT)) {
     Spacer(modifier = GlanceModifier.width(TIME_COLUMN_WIDTH))
-    DAY_LABELS.forEachIndexed { day, label ->
+    DAY_LABEL_ORDER.forEach { dayOfWeek ->
+      val label = DAY_LABELS[dayOfWeek]
       Box(
         modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
         contentAlignment = Alignment.Center,
       ) {
-        if (day == todayIndex) {
+        if (dayOfWeek == today) {
           Box(
             modifier = GlanceModifier
               .width(TODAY_BADGE_SIZE)
@@ -131,10 +132,10 @@ private fun DayHeader(todayIndex: Int) {
               .cornerRadius(8.dp),
             contentAlignment = Alignment.Center,
           ) {
-            DayLabel(day = day, label = label)
+            DayLabel(dayOfWeek = dayOfWeek, label = label)
           }
         } else {
-          DayLabel(day = day, label = label)
+          DayLabel(dayOfWeek = dayOfWeek, label = label)
         }
       }
     }
@@ -142,12 +143,12 @@ private fun DayHeader(todayIndex: Int) {
 }
 
 @Composable
-private fun DayLabel(day: Int, label: String) {
+private fun DayLabel(dayOfWeek: Int, label: String) {
   Text(
     text = label,
     modifier = GlanceModifier.semantics { testTag = DAY_LABEL_TAG },
     style = TextStyle(
-      color = ColorProvider(dayLabelColor(day)),
+      color = ColorProvider(dayLabelColor(dayOfWeek)),
       fontSize = 9.sp,
       fontWeight = FontWeight.Bold,
       textAlign = TextAlign.Center,
@@ -221,8 +222,8 @@ internal fun DayCell(
   }
 }
 
-private fun dayLabelColor(day: Int): Color = when (day) {
-  5 -> ACCENT
-  6 -> CORAL
+private fun dayLabelColor(dayOfWeek: Int): Color = when (dayOfWeek) {
+  DayOfWeek.SATURDAY -> ACCENT
+  DayOfWeek.SUNDAY -> CORAL
   else -> INK
 }

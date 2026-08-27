@@ -59,7 +59,7 @@ Android のホーム画面に週グリッドを置く。描画方針は [tech-de
 Event {
   id: string
   title: string
-  dayOfWeek: 0..6   // 0 = 月曜 … 6 = 日曜
+  dayOfWeek: 0..6   // 0 = 日曜 … 6 = 土曜（JS の Date#getDay と同じ）
   startMinutes: number  // 0:00 からの分
   endMinutes: number
   note?: string

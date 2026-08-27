@@ -11,13 +11,13 @@ import org.junit.runner.RunWith
 private val MATH = WidgetEvent(
   id = "math",
   title = "数学",
-  dayOfWeek = 0,
+  dayOfWeek = DayOfWeek.MONDAY,
   startMinutes = 9 * 60,
   endMinutes = 10 * 60,
 )
 
 private fun byDay(vararg events: WidgetEvent): List<List<WidgetEvent>> =
-  DAY_LABELS.indices.map { day -> events.filter { it.dayOfWeek == day } }
+  DAY_LABEL_ORDER.map { dayOfWeek -> events.filter { it.dayOfWeek == dayOfWeek } }
 
 @RunWith(AndroidJUnit4::class)
 class TimetableWidgetTest {
@@ -37,7 +37,7 @@ class TimetableWidgetTest {
     setContext(ApplicationProvider.getApplicationContext())
     provideComposable { WidgetBody(emptyList()) }
 
-    onAllNodes(hasTestTag(DAY_LABEL_TAG)).assertCountEquals(DAY_LABELS.size)
+    onAllNodes(hasTestTag(DAY_LABEL_TAG)).assertCountEquals(DAY_LABEL_ORDER.size)
     onNode(hasTextEqualTo("月")).assertExists()
     onNode(hasTextEqualTo("日")).assertExists()
   }

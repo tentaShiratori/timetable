@@ -1,10 +1,11 @@
 import { SubmitEvent, useState } from "react";
 import {
+  DAY_LABEL_ORDER,
   DAY_LABELS,
   DAY_MINUTES,
+  DayOfWeek,
   formatMinutes,
   validateEvent,
-  type DayOfWeek,
   type Event,
 } from "../../components/Event/event";
 import { useEvents } from "../../components/Event/useEvents";
@@ -136,9 +137,9 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
         <label>
           曜日
           <select value={dayOfWeek} onChange={(change) => setDayOfWeek(Number(change.target.value) as DayOfWeek)}>
-            {DAY_LABELS.map((label, index) => (
-              <option key={label} value={index}>
-                {label}曜
+            {DAY_LABEL_ORDER.map((day) => (
+              <option key={day} value={day}>
+                {DAY_LABELS[day]}曜
               </option>
             ))}
           </select>

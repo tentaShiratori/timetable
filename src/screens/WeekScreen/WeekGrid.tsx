@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { DAY_LABELS, formatMinutes, type DayOfWeek, type Event } from "../../components/Event/event";
+import { DAY_LABEL_ORDER, DAY_LABELS, formatMinutes, type DayOfWeek, type Event } from "../../components/Event/event";
 import { eventColor, SLOT_COUNT, SLOT_HEIGHT_PX, slotStartMinutes } from "./grid";
 import { layoutDayEvents } from "./layout";
 
@@ -20,15 +20,17 @@ const dayStore = {
 };
 export function WeekGrid({ events, onSlotClick, onEventClick }: WeekGridProps) {
   const bodyHeight = SLOT_COUNT * SLOT_HEIGHT_PX;
-  const day = useSyncExternalStore(dayStore.subscribe, dayStore.getSnapshot);
+  const today = useSyncExternalStore(dayStore.subscribe, dayStore.getSnapshot);
 
   return (
     <div className="week-scroll">
       <div className="week-header">
         <div className="week-header-time" />
-        {DAY_LABELS.map((label, index) => (
-          <div key={label} className="week-day-header" role="columnheader">
-            <span className={(index + 1) % 7 === day ? "week-day-header-today" : "week-day-header-label"}>{label}</span>
+        {DAY_LABEL_ORDER.map((dayOfWeek) => (
+          <div key={dayOfWeek} className="week-day-header" role="columnheader">
+            <span className={dayOfWeek === today ? "week-day-header-today" : "week-day-header-label"}>
+              {DAY_LABELS[dayOfWeek]}
+            </span>
           </div>
         ))}
       </div>
@@ -43,20 +45,17 @@ export function WeekGrid({ events, onSlotClick, onEventClick }: WeekGridProps) {
             );
           })}
         </div>
-        {DAY_LABELS.map((label, index) => {
-          const dayOfWeek = index as DayOfWeek;
-          return (
-            <DayColumn
-              key={label}
-              dayLabel={label}
-              dayOfWeek={dayOfWeek}
-              events={events.filter((event) => event.dayOfWeek === dayOfWeek)}
-              bodyHeight={bodyHeight}
-              onSlotClick={onSlotClick}
-              onEventClick={onEventClick}
-            />
-          );
-        })}
+        {DAY_LABEL_ORDER.map((dayOfWeek) => (
+          <DayColumn
+            key={dayOfWeek}
+            dayLabel={DAY_LABELS[dayOfWeek]}
+            dayOfWeek={dayOfWeek}
+            events={events.filter((event) => event.dayOfWeek === dayOfWeek)}
+            bodyHeight={bodyHeight}
+            onSlotClick={onSlotClick}
+            onEventClick={onEventClick}
+          />
+        ))}
       </div>
     </div>
   );

@@ -35,5 +35,5 @@ export function reminderBody(event: Event): string {
 }
 
 function toTauriWeekday(dayOfWeek: DayOfWeek): number {
-  return dayOfWeek === 6 ? 1 : dayOfWeek + 2;
+  return dayOfWeek + 1;
 }

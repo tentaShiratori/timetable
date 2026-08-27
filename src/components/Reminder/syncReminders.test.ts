@@ -14,7 +14,7 @@ import { syncReminders } from "./syncReminders";
 const math: Event = {
   id: "math",
   title: "数学",
-  dayOfWeek: 0,
+  dayOfWeek: 1,
   startMinutes: 9 * 60,
   endMinutes: 10 * 60,
 };
@@ -22,7 +22,7 @@ const math: Event = {
 const english: Event = {
   id: "english",
   title: "英語",
-  dayOfWeek: 1,
+  dayOfWeek: 2,
   startMinutes: 10 * 60,
   endMinutes: 11 * 60,
 };

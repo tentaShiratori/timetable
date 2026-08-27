@@ -22,7 +22,7 @@ describe("useEvents", () => {
     await user.type(screen.getByLabelText("タイトル"), "帰宅");
     await user.click(screen.getByRole("button", { name: "保存" }));
     await screen.findByRole("button", { name: "帰宅" });
-    const saved = JSON.parse(appFiles.get("events") ?? "[]") as Array<{ title: string }>;
-    expect(saved.some((event) => event.title === "帰宅")).toBe(true);
+    const saved = JSON.parse(appFiles.get("events") ?? "[]") as Array<{ title: string; dayOfWeek: number }>;
+    expect(saved.some((event) => event.title === "帰宅" && event.dayOfWeek === 5)).toBe(true);
   });
 });

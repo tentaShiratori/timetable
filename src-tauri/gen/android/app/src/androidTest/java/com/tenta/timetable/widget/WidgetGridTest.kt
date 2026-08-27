@@ -88,9 +88,14 @@ class WidgetGridTest {
   }
 
   @Test
-  fun mondayFirstDayIndexは日曜始まりを月曜始まりに直す() {
-    assertEquals(0, mondayFirstDayIndex(Calendar.MONDAY))
-    assertEquals(5, mondayFirstDayIndex(Calendar.SATURDAY))
-    assertEquals(6, mondayFirstDayIndex(Calendar.SUNDAY))
+  fun DAY_LABEL_ORDERは月曜始まりでラベルはdayOfWeekに対応する() {
+    assertEquals(listOf("月", "火", "水", "木", "金", "土", "日"), DAY_LABEL_ORDER.map { DAY_LABELS[it] })
+  }
+
+  @Test
+  fun toDayOfWeekはCalendarの日曜始まりをアプリの0から6にする() {
+    assertEquals(DayOfWeek.SUNDAY, toDayOfWeek(Calendar.SUNDAY))
+    assertEquals(DayOfWeek.MONDAY, toDayOfWeek(Calendar.MONDAY))
+    assertEquals(DayOfWeek.SATURDAY, toDayOfWeek(Calendar.SATURDAY))
   }
 }

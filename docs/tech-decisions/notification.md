@@ -30,7 +30,7 @@
 
 ### 曜日の対応
 
-アプリは `0 = 月曜 … 6 = 日曜`。プラグインの `weekday` は Java `Calendar.DAY_OF_WEEK` と同じで `1 = 日曜 … 7 = 土曜`。
+アプリは `0 = 日曜 … 6 = 土曜`（`Date#getDay` と同じ）。プラグインの `weekday` は Java `Calendar.DAY_OF_WEEK` と同じで `1 = 日曜 … 7 = 土曜`。変換は `weekday = dayOfWeek + 1`。
 
 開始の 10 分前が 0:00 を跨ぐときは、曜日を 1 日戻して 23:50 台にする。
 

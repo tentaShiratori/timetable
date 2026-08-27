@@ -27,7 +27,7 @@ describe("EventEditScreen", () => {
     const user = userEvent.setup();
     appFiles.set(
       "events",
-      JSON.stringify([{ id: "pe", title: "体育", dayOfWeek: 4, startMinutes: 13 * 60, endMinutes: 14 * 60 }]),
+      JSON.stringify([{ id: "pe", title: "体育", dayOfWeek: 5, startMinutes: 13 * 60, endMinutes: 14 * 60 }]),
     );
     renderApp(<App />);
     await user.click(await screen.findByRole("button", { name: "体育" }));
@@ -43,7 +43,7 @@ describe("EventEditScreen", () => {
     const user = userEvent.setup();
     appFiles.set(
       "events",
-      JSON.stringify([{ id: "art", title: "美術", dayOfWeek: 2, startMinutes: 11 * 60, endMinutes: 12 * 60 }]),
+      JSON.stringify([{ id: "art", title: "美術", dayOfWeek: 3, startMinutes: 11 * 60, endMinutes: 12 * 60 }]),
     );
     renderApp(<App />);
     await user.click(await screen.findByRole("button", { name: "美術" }));

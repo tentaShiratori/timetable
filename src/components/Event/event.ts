@@ -2,6 +2,15 @@
  * @public
  */
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export const DayOfWeek = {
+  SUNDAY: 0,
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+} as const satisfies Record<string, DayOfWeek>;
 
 /**
  * @public
@@ -34,13 +43,34 @@ export const DAY_MINUTES = 24 * 60;
 /**
  * @public
  */
-export const DAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"] as const;
+export const DAY_LABELS = {
+  [DayOfWeek.SUNDAY]: "日",
+  [DayOfWeek.MONDAY]: "月",
+  [DayOfWeek.TUESDAY]: "火",
+  [DayOfWeek.WEDNESDAY]: "水",
+  [DayOfWeek.THURSDAY]: "木",
+  [DayOfWeek.FRIDAY]: "金",
+  [DayOfWeek.SATURDAY]: "土",
+};
+
+/**
+ * @public
+ */
+export const DAY_LABEL_ORDER = [
+  DayOfWeek.MONDAY,
+  DayOfWeek.TUESDAY,
+  DayOfWeek.WEDNESDAY,
+  DayOfWeek.THURSDAY,
+  DayOfWeek.FRIDAY,
+  DayOfWeek.SATURDAY,
+  DayOfWeek.SUNDAY,
+] as const;
 
 /**
  * @public
  */
 export function isDayOfWeek(value: number): value is DayOfWeek {
-  return Number.isInteger(value) && value >= 0 && value <= 6;
+  return Object.values(DayOfWeek).includes(value as never);
 }
 
 /**
