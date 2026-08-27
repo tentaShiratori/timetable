@@ -74,6 +74,7 @@ Kotlin は `src-tauri/gen/android/app/src/main/java/com/tenta/timetable/widget/`
 
 - [x] Tauri 公式の notification プラグインを入れる
 - [x] 通知許可を確認・未許可ならリクエストする
+- [x] Android 12+ の exact alarm を確認・未許可なら設定画面を開く
 - [x] Android の通知チャンネルを作る
 - [x] 予定の開始 10 分前に毎週通知する（`Schedule.interval`）
 - [x] 予定の追加・更新・削除・起動時に pending を組み直す

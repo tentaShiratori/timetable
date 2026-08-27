@@ -9,6 +9,8 @@
     "core:default",
     "allow-load-app-file",
     "allow-save-app-file",
+    "allow-is-alarm-permission-granted",
+    "allow-request-alarm-permission",
     "notification:default"
   ]
 }

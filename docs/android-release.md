@@ -196,7 +196,7 @@ release ビルドは R8 の圧縮・難読化（`isMinifyEnabled = true`）が�
 - 空きマスをタップして予定を追加できる
 - 予定をタップして編集・削除できる
 - アプリを終了して再起動しても予定が残っている（`load_app_file` / `save_app_file` が動いている）
-- 通知の許可ダイアログを許可すると、予定の 10 分前に通知が出る（端末の日時を進めて確認してよい）。Android 12 以降で時刻がずれるときは、設定の「アラームとリマインダー」も許可する
+- 通知の許可ダイアログを許可すると、予定の 10 分前に通知が出る（端末の日時を進めて確認してよい）。Android 12 以降で exact alarm が未許可なら、アプリが「アラームとリマインダー」設定を開くので、トグルをオンにする
 
 ウィジェット（[tech-decisions/android-widget.md](./tech-decisions/android-widget.md)）も見る。Glance は Compose を通るので、R8 で壊れると「Can't show content」になる。
 

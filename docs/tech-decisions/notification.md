@@ -21,8 +21,9 @@
 フロントから次の手順で送る（[公式の使い方](https://v2.tauri.app/plugin/notification/) と同じ）。
 
 1. `isPermissionGranted` / 未許可なら `requestPermission`（Android 13+ の `POST_NOTIFICATIONS`）
-2. `createChannel`（Android 8+。チャンネルが無いと出ない）
-3. 消えた予定の通知だけ `cancel(ids)` し、現行の予定ごとに `sendNotification({ schedule })`
+2. `isAlarmPermissionGranted` / 未許可なら `requestAlarmPermission`（Android 12+ の exact alarm。ダイアログは出せないので設定画面を開く）
+3. `createChannel`（Android 8+。チャンネルが無いと出ない）
+4. 消えた予定の通知だけ `cancel(ids)` し、現行の予定ごとに `sendNotification({ schedule })`
 
 `cancelAll` は Android で引数なし `cancel` になり、Kotlin の `lateinit var notifications` が初期化されず落ちる（[調査](../invest/notification.md)）。通知 id は予定の UUID から決め、一度使った id は再利用できる。消した予定の id は `cancel` が成功するまで `reminder_ids.json` に残す。
 
@@ -39,6 +40,8 @@
 Doze 中でも 10 分前に近づけたいので `allowWhileIdle: true` にする。プラグインは exact alarm が使える端末では `setExactAndAllowWhileIdle` を使う。
 
 プラグインの AndroidManifest には `POST_NOTIFICATIONS` と起動時復元用の `RECEIVE_BOOT_COMPLETED` はあるが、`SCHEDULE_EXACT_ALARM` は無い。Android 12+ で exact にするにはアプリ側 Manifest に足す。
+
+`SCHEDULE_EXACT_ALARM` はランタイム権限ではない。アプリ内に許可ダイアログは出せず、未許可なら `Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM` で設定画面を開く。実装は Kotlin の `AlarmPermissionPlugin`（`isPermissionGranted` / `requestPermission`）を、Rust の `is_alarm_permission_granted` / `request_alarm_permission` から呼ぶ。フロントは通知と同じく、確認してから未許可のときだけリクエストする。同一プロセスでは設定画面を一度だけ開く。許可が取れなくても通知自体は組む（inexact に落ちる）。
 
 ### 通知の identifer
 
@@ -62,5 +65,5 @@ Doze 中でも 10 分前に近づけたいので `allowWhileIdle: true` にす�
 
 - JS: `@tauri-apps/plugin-notification`
 - Rust: `tauri-plugin-notification` を `lib.rs` で `init`
-- ACL: `notification:default`（`notify` / 許可確認 / チャンネル / `cancel`）
+- ACL: `notification:default`（`notify` / 許可確認 / チャンネル / `cancel`）、`allow-is-alarm-permission-granted` / `allow-request-alarm-permission`
 - Android: プラグイン側の `POST_NOTIFICATIONS` に加え、アプリ Manifest に `SCHEDULE_EXACT_ALARM`

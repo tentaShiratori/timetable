@@ -9,6 +9,7 @@ import {
   Visibility,
 } from "@tauri-apps/plugin-notification";
 import type { Event } from "../Event/event";
+import { isAlarmPermissionGranted, requestAlarmPermission } from "./alarmPermission";
 import { REMINDER_CHANNEL_ID, reminderBody, reminderFireAt, reminderNotificationId } from "./reminder";
 import { loadScheduledIds, saveScheduledIds } from "./scheduledIds";
 
@@ -51,6 +52,14 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
   }
   if (!granted || token !== syncToken) {
     await saveScheduledIds([...leftoverDeleted, ...storedIds.filter((id) => currentIdSet.has(id))]);
+    return;
+  }
+
+  let alarmGranted = await isAlarmPermissionGranted();
+  if (!alarmGranted) {
+    await requestAlarmPermission();
+  }
+  if (token !== syncToken) {
     return;
   }
 

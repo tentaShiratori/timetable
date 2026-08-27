@@ -6,6 +6,7 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
+import { alarmPermission } from "../../test/mocks/tauri";
 import type { Event } from "../Event/event";
 import { REMINDER_CHANNEL_ID, reminderNotificationId } from "./reminder";
 import { loadScheduledIds } from "./scheduledIds";
@@ -59,6 +60,8 @@ describe("syncReminders", () => {
     await syncReminders([math]);
     expect(vi.mocked(requestPermission)).toHaveBeenCalledOnce();
     expect(vi.mocked(sendNotification)).not.toHaveBeenCalled();
+    expect(alarmPermission.checked).toBe(false);
+    expect(alarmPermission.requested).toBe(false);
   });
 
   it("許可があれば開始10分前の毎週通知を組む", async () => {
@@ -82,6 +85,17 @@ describe("syncReminders", () => {
       },
     });
     expect(await loadScheduledIds()).toEqual([reminderNotificationId("math")]);
+    expect(alarmPermission.checked).toBe(true);
+    expect(alarmPermission.requested).toBe(false);
+  });
+
+  it("アラーム許可が無ければ設定画面を開き、通知は組む", async () => {
+    vi.mocked(isPermissionGranted).mockResolvedValue(true);
+    alarmPermission.granted = false;
+    await syncReminders([math]);
+    expect(alarmPermission.checked).toBe(true);
+    expect(alarmPermission.requested).toBe(true);
+    expect(vi.mocked(sendNotification)).toHaveBeenCalledOnce();
   });
 
   it("消した予定の通知は id 指定で cancel する", async () => {

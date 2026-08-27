@@ -7,3 +7,13 @@ commands.allow = ["load_app_file"]
 identifier = "allow-save-app-file"
 description = "アプリデータへ JSON ファイルを書く"
 commands.allow = ["save_app_file"]
+
+[[permission]]
+identifier = "allow-is-alarm-permission-granted"
+description = "exact alarm の許可状態を確認する"
+commands.allow = ["is_alarm_permission_granted"]
+
+[[permission]]
+identifier = "allow-request-alarm-permission"
+description = "exact alarm が未許可なら設定画面を開く"
+commands.allow = ["request_alarm_permission"]
