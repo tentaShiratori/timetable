@@ -67,3 +67,11 @@ Doze 中でも 10 分前に近づけたいので `allowWhileIdle: true` にす�
 - Rust: `tauri-plugin-notification` を `lib.rs` で `init`
 - ACL: `notification:default`（`notify` / 許可確認 / チャンネル / `cancel`）、`allow-is-alarm-permission-granted` / `allow-request-alarm-permission`
 - Android: プラグイン側の `POST_NOTIFICATIONS` に加え、アプリ Manifest に `SCHEDULE_EXACT_ALARM`
+
+## release ビルドと R8
+
+`notify` は Rust → Kotlin の `NotificationPlugin.show` に JSON が渡り、Jackson が `Notification` / `NotificationSchedule`（`Interval` の `DateMatch` など）に変換してから `AlarmManager` に登録する。
+
+release は `isMinifyEnabled = true` のため R8 がプラグイン側クラスを難読化・削除しうる。`tauri-plugin-notification` の `consumer-rules.pro` は空に近く、アプリ側で keep しないと **schedule 付き notify が黙って失敗**する（即時通知だけなら通る場合もある）。症状は通知許可 ON でも pending alarm 0 件、logcat に Tauri/Notification の debug が出ない（release では Logger 自体が無効）。
+
+`src-tauri/gen/android/app/proguard-rules.pro` で `app.tauri.notification.**` を keep する。実機で keep あり/なしの release を比較し、keep なしではリマインドが届かないことを確認済み。

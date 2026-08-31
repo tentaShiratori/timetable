@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# release で R8 が通知プラグインの Jackson デシリアライズ用クラスを壊すと、
+# schedule 付き notify が黙って失敗し AlarmManager に登録されない。
+-keepattributes *Annotation*,InnerClasses,EnclosingMethod,Signature
+-keep class app.tauri.notification.** { *; }
+-keepclassmembers class app.tauri.notification.** { *; }

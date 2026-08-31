@@ -192,6 +192,8 @@ adb uninstall com.tenta.timetable
 
 release ビルドは R8 の圧縮・難読化（`isMinifyEnabled = true`）が効くので、debug で動いても release で壊れることがある。入れたら最低限これを見る。
 
+**通知（R8）**: `notify` の `schedule` は Kotlin 側で Jackson が JSON から `NotificationSchedule` 等にデシリアライズする。R8 が `app.tauri.notification.**` を壊すとパースに失敗し、**AlarmManager に登録されず** `check-android-alarms.ps1` も NG のままになる（通知許可が ON でも）。release では Tauri Logger も出ないので症状だけでは気づきにくい。対策は `src-tauri/gen/android/app/proguard-rules.pro` の keep ルール（実機で keep なし release との差分を確認済み）。
+
 - 週グリッドが表示される
 - 空きマスをタップして予定を追加できる
 - 予定をタップして編集・削除できる
@@ -208,8 +210,14 @@ release ビルドは R8 の圧縮・難読化（`isMinifyEnabled = true`）が�
 落ちたときはログを見る。
 
 ```powershell
-adb logcat -s RustStdoutStderr Tauri AndroidRuntime GlanceAppWidget Notification
+.\scripts\show-android-logs.ps1
+.\scripts\show-android-logs.ps1 -Dump -Lines 300
+.\scripts\check-android-alarms.ps1
 ```
+
+`show-android-logs.ps1` は `Tauri` / `AndroidRuntime` / `GlanceAppWidget` / `chromium`（WebView の `console.log`）を追う。`-WebView` は JS 向けにタグを絞る。release では Tauri Logger がほぼ出ないので、通知の切り分けは `check-android-alarms.ps1` を先に使う。`-Clear` でバッファ消去、`-AppOnly` で起動中プロセスだけ、`-Save` でファイル保存。`-Dump` は直近だけ表示して終了する。
+
+`check-android-alarms.ps1` は `TimedNotificationPublisher` の **pending** alarm 登録（`RTC` と `allowWhileIdle` 時の `RTC_WAKEUP` の両方）、通知権限（`POST_NOTIFICATIONS` / appops / importance）、exact alarm、充電/Doze 状態をまとめて表示する。通知が OS でブロックされている場合は alarm 以前に NG になる。
 
 ## バージョンを上げる
 
