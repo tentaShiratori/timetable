@@ -18,11 +18,60 @@ function App() {
   }
 
   return (
-    <main className="app">
+    <main
+      className="app"
+      // style={{
+      //   display: "flex",
+      //   flexDirection: "column",
+      //   alignItems: "center",
+      //   justifyContent: "center",
+      //   gap: "2rem",
+      // }}
+    >
       <Route path="/">
         <WeekScreen />
       </Route>
       <EventEditScreen />
+      {/* <button
+        onClick={() => {
+          void createChannel({
+            id: "test",
+            name: "Test Message",
+            description: "this is test message",
+          });
+        }}
+      >
+        createChannel
+      </button>
+      <button
+        onClick={async () => {
+          if (!(await isPermissionGranted())) {
+            await requestAlarmPermission();
+          }
+          const id = 1;
+          await cancel([id]);
+          const at = new Date(Date.now() + 70_000);
+          sendNotification({
+            id: id,
+            title: "test",
+            body: "test",
+            channelId: "test",
+            autoCancel: true,
+            schedule: Schedule.interval(
+              {
+                weekday: at.getDay() + 1,
+                hour: at.getHours(),
+                minute: at.getMinutes(),
+              },
+              true,
+            ),
+            // schedule: Schedule.at(at),
+          });
+          console.log(at, at.getDay() + 1, at.getHours(), at.getMinutes());
+        }}
+      >
+        sendNotification
+      </button> */}
     </main>
   );
 }

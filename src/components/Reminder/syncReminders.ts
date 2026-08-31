@@ -30,7 +30,7 @@ export async function syncReminders(events: Event[]): Promise<void> {
 async function applyReminders(events: Event[], token: number): Promise<void> {
   const storedIds = await loadScheduledIds();
   if (token !== syncToken) {
-    return;
+    throw new Error("syncToken mismatch");
   }
   const currentIds = events.map((event) => reminderNotificationId(event.id));
   const currentIdSet = new Set(currentIds);
@@ -38,7 +38,7 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
   // 削除されたイベントの通知をcancelし、cancelに失敗したらidを残しておく
   const leftoverDeleted = await cancelDeletedIds(deletedIds);
   if (token !== syncToken) {
-    return;
+    throw new Error("syncToken mismatch");
   }
 
   if (events.length === 0) {
@@ -60,7 +60,7 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
     await requestAlarmPermission();
   }
   if (token !== syncToken) {
-    return;
+    throw new Error("syncToken mismatch");
   }
 
   await createChannel({
@@ -72,10 +72,11 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
     vibration: true,
   });
   if (token !== syncToken) {
-    return;
+    throw new Error("syncToken mismatch");
   }
   for (const event of events) {
     const fireAt = reminderFireAt(event);
+    console.log("sendNotification", event.title, fireAt.weekday, fireAt.hour, fireAt.minute);
     sendNotification({
       id: reminderNotificationId(event.id),
       title: event.title,

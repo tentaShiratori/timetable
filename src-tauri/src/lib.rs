@@ -1,4 +1,4 @@
-mod alarm_permission;
+mod plugins;
 
 use tauri::Manager;
 
@@ -33,12 +33,12 @@ fn save_app_file(app: tauri::AppHandle, kind: String, contents: String) -> Resul
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
-        .plugin(alarm_permission::plugin())
+        .plugin(plugins::alarm_permission::init())
         .invoke_handler(tauri::generate_handler![
             load_app_file,
             save_app_file,
-            alarm_permission::is_alarm_permission_granted,
-            alarm_permission::request_alarm_permission
+            plugins::alarm_permission::is_alarm_permission_granted,
+            plugins::alarm_permission::request_alarm_permission
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -9,7 +9,7 @@ struct AlarmPermissionResult {
     granted: bool,
 }
 
-pub fn plugin<R: Runtime>() -> TauriPlugin<R> {
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
     tauri::plugin::Builder::new("alarm-permission")
         .setup(|app, api| {
             #[cfg(target_os = "android")]
