@@ -60,6 +60,15 @@ pnpm tauri android build --apk
 pnpm test run <ファイル名>
 ```
 
+## Cloud Agent
+
+Cursor Cloud Agent 用の環境定義は次の 2 ファイルです。
+
+- [`.cursor/environment.json`](.cursor/environment.json) — 環境名と install コマンド
+- [`.cursor/cloud-agent-install.sh`](.cursor/cloud-agent-install.sh) — mise（node / pnpm / lefthook）と `pnpm install` の冪等セットアップ
+
+Android のビルドと実機確認は、この Cloud Agent 環境の対象外です。
+
 ## 技術スタック
 
 - [Tauri 2](https://v2.tauri.app/)（Android）
