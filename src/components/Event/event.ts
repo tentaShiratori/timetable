@@ -15,6 +15,15 @@ export const DayOfWeek = {
 /**
  * @public
  */
+export type EventTodo = {
+  id: string;
+  title: string;
+  completedAt?: number;
+};
+
+/**
+ * @public
+ */
 export type Event = {
   id: string;
   title: string;
@@ -22,6 +31,7 @@ export type Event = {
   startMinutes: number;
   endMinutes: number;
   note?: string;
+  todos?: EventTodo[];
 };
 
 /**
@@ -33,12 +43,15 @@ export type EventDraft = {
   startMinutes: number;
   endMinutes: number;
   note?: string;
+  todos?: EventTodo[];
 };
 
 /**
  * @public
  */
 export const DAY_MINUTES = 24 * 60;
+
+const TODO_RESET_MS = 24 * 60 * 60 * 1000;
 
 /**
  * @public
@@ -94,6 +107,9 @@ export function validateEvent(draft: EventDraft): string[] {
       errors.push("終了は開始より後にしてください");
     }
   }
+  if (draft.todos?.some((todo) => todo.title.trim() === "")) {
+    errors.push("やることの名前を入力してください");
+  }
   return errors;
 }
 
@@ -109,6 +125,24 @@ export function formatMinutes(minutes: number): string {
   return `${hour}:${String(minute).padStart(2, "0")}`;
 }
 
+/**
+ * @public
+ */
+export function resetExpiredTodos(todos: EventTodo[], now: number): EventTodo[] {
+  return todos.map((todo) => {
+    if (todo.completedAt === undefined) {
+      return todo;
+    }
+    if (now - todo.completedAt >= TODO_RESET_MS) {
+      return { id: todo.id, title: todo.title };
+    }
+    return todo;
+  });
+}
+
+/**
+ * @public
+ */
 export function parseEvents(raw: string | null): Event[] {
   if (raw === null || raw === "") {
     return [];
@@ -118,19 +152,22 @@ export function parseEvents(raw: string | null): Event[] {
     if (!Array.isArray(data)) {
       return [];
     }
-    return data.filter(isStoredEvent);
+    return data.flatMap((item) => {
+      const event = toStoredEvent(item);
+      return event ? [event] : [];
+    });
   } catch {
     return [];
   }
 }
 
-function isStoredEvent(value: unknown): value is Event {
+function toStoredEvent(value: unknown): Event | null {
   if (typeof value !== "object" || value === null) {
-    return false;
+    return null;
   }
   const record = value as Record<string, unknown>;
   if (typeof record.id !== "string" || record.id === "") {
-    return false;
+    return null;
   }
   const draft: EventDraft = {
     title: typeof record.title === "string" ? record.title : "",
@@ -139,5 +176,54 @@ function isStoredEvent(value: unknown): value is Event {
     endMinutes: typeof record.endMinutes === "number" ? record.endMinutes : Number.NaN,
     note: typeof record.note === "string" ? record.note : undefined,
   };
-  return validateEvent(draft).length === 0;
+  if (validateEvent(draft).length > 0 || !isDayOfWeek(draft.dayOfWeek)) {
+    return null;
+  }
+  const todos = parseTodos(record.todos);
+  return {
+    id: record.id,
+    title: draft.title,
+    dayOfWeek: draft.dayOfWeek,
+    startMinutes: draft.startMinutes,
+    endMinutes: draft.endMinutes,
+    ...(draft.note !== undefined ? { note: draft.note } : {}),
+    ...(todos !== undefined ? { todos } : {}),
+  };
+}
+
+function parseTodos(value: unknown): EventTodo[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const todos: EventTodo[] = [];
+  for (const item of value) {
+    const todo = toStoredTodo(item);
+    if (todo) {
+      todos.push(todo);
+    }
+  }
+  return todos;
+}
+
+function toStoredTodo(value: unknown): EventTodo | null {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.id !== "string" || record.id === "") {
+    return null;
+  }
+  if (typeof record.title !== "string" || record.title.trim() === "") {
+    return null;
+  }
+  if (record.completedAt === undefined) {
+    return { id: record.id, title: record.title };
+  }
+  if (typeof record.completedAt !== "number" || !Number.isFinite(record.completedAt)) {
+    return { id: record.id, title: record.title };
+  }
+  return { id: record.id, title: record.title, completedAt: record.completedAt };
 }

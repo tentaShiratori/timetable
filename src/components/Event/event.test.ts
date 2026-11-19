@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMinutes, parseEvents, validateEvent } from "./event";
+import { formatMinutes, parseEvents, resetExpiredTodos, validateEvent } from "./event";
 
 describe("validateEvent", () => {
   const valid = {
@@ -29,6 +29,15 @@ describe("validateEvent", () => {
   it("24:00終了は許可する", () => {
     expect(validateEvent({ ...valid, startMinutes: 23 * 60, endMinutes: 24 * 60 })).toEqual([]);
   });
+
+  it("やることの名前が空ならエラー", () => {
+    expect(
+      validateEvent({
+        ...valid,
+        todos: [{ id: "1", title: "  " }],
+      }),
+    ).toContain("やることの名前を入力してください");
+  });
 });
 
 describe("formatMinutes", () => {
@@ -54,5 +63,69 @@ describe("parseEvents", () => {
       { id: "2", title: "", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 },
     ]);
     expect(parseEvents(raw)).toEqual([{ id: "1", title: "英語", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 }]);
+  });
+
+  it("todos がない既存データも読める", () => {
+    const raw = JSON.stringify([{ id: "1", title: "英語", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 }]);
+    expect(parseEvents(raw)[0]?.todos).toBeUndefined();
+  });
+
+  it("todos を含めて読む", () => {
+    const raw = JSON.stringify([
+      {
+        id: "1",
+        title: "英語",
+        dayOfWeek: 1,
+        startMinutes: 540,
+        endMinutes: 600,
+        todos: [
+          { id: "t1", title: "単語", completedAt: 1000 },
+          { id: "t2", title: "" },
+          { id: "t3", title: "音読" },
+        ],
+      },
+    ]);
+    expect(parseEvents(raw)[0]?.todos).toEqual([
+      { id: "t1", title: "単語", completedAt: 1000 },
+      { id: "t3", title: "音読" },
+    ]);
+  });
+});
+
+describe("resetExpiredTodos", () => {
+  const hour = 60 * 60 * 1000;
+  const now = 1_000_000_000_000;
+
+  it("ちょうど24時間たった項目は未完了に戻す", () => {
+    expect(resetExpiredTodos([{ id: "1", title: "課題", completedAt: now - 24 * hour }], now)).toEqual([
+      { id: "1", title: "課題" },
+    ]);
+  });
+
+  it("24時間未満の項目はそのまま残す", () => {
+    expect(resetExpiredTodos([{ id: "1", title: "課題", completedAt: now - 24 * hour + 1 }], now)).toEqual([
+      { id: "1", title: "課題", completedAt: now - 24 * hour + 1 },
+    ]);
+  });
+
+  it("未チェックの項目はそのまま残す", () => {
+    expect(resetExpiredTodos([{ id: "1", title: "課題" }], now)).toEqual([{ id: "1", title: "課題" }]);
+  });
+
+  it("期限切れと期限内が混在しても項目ごとに判定する", () => {
+    expect(
+      resetExpiredTodos(
+        [
+          { id: "1", title: "古い", completedAt: now - 25 * hour },
+          { id: "2", title: "新しい", completedAt: now - hour },
+          { id: "3", title: "未完了" },
+        ],
+        now,
+      ),
+    ).toEqual([
+      { id: "1", title: "古い" },
+      { id: "2", title: "新しい", completedAt: now - hour },
+      { id: "3", title: "未完了" },
+    ]);
   });
 });

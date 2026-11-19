@@ -16,10 +16,13 @@ export const useRouter = () => {
       path: history[0],
       history,
       back: () => {
-        setHistory(history.length > 1 ? history.slice(1) : ["/"]);
+        setHistory((current) => (current.length > 1 ? current.slice(1) : ["/"]));
+      },
+      home: () => {
+        setHistory(["/"]);
       },
       push: (path: string) => {
-        setHistory([path, ...history]);
+        setHistory((current) => [path, ...current]);
       },
     };
   }, [history, setHistory]);

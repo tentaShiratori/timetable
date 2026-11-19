@@ -7,6 +7,7 @@ import {
   formatMinutes,
   validateEvent,
   type Event,
+  type EventTodo,
 } from "../../components/Event/event";
 import { useEvents } from "../../components/Event/useEvents";
 import { useRouter } from "../../components/Route/useRouter";
@@ -45,6 +46,14 @@ function withCurrent(choices: number[], current: number): number[] {
   return [...choices, current].sort((a, b) => a - b);
 }
 
+function copyTodos(todos: EventTodo[]): EventTodo[] {
+  return todos.map((todo) => ({
+    id: crypto.randomUUID(),
+    title: todo.title,
+    ...(todo.completedAt !== undefined ? { completedAt: todo.completedAt } : {}),
+  }));
+}
+
 function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
   const { events, addEvent, addEvents, updateEvent, removeEvent } = useEvents();
   const router = useRouter();
@@ -61,6 +70,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
     parsed.mode === "create" ? defaultEnd(parsed.startMinutes) : (existing?.endMinutes ?? 9 * 60),
   );
   const [note, setNote] = useState(existing?.note ?? "");
+  const [todos, setTodos] = useState<EventTodo[]>(existing?.todos ?? []);
   const [errors, setErrors] = useState<string[]>([]);
 
   if (parsed.mode === "edit" && !existing) {
@@ -86,12 +96,17 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
       startMinutes,
       endMinutes,
       note: note.trim() === "" ? undefined : note,
+      todos,
     };
     const nextErrors = validateEvent(draft);
     if (nextErrors.length > 0) {
       setErrors(nextErrors);
       return;
     }
+    const trimmedTodos = todos.map((todo) => ({
+      ...todo,
+      title: todo.title.trim(),
+    }));
     const nextEvent: Event = {
       id: existing?.id ?? crypto.randomUUID(),
       title: title.trim(),
@@ -99,6 +114,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
       startMinutes,
       endMinutes,
       note: draft.note,
+      ...(trimmedTodos.length > 0 ? { todos: trimmedTodos } : {}),
     };
     if (isEdit) {
       updateEvent(nextEvent);
@@ -110,6 +126,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
             ...nextEvent,
             id: crypto.randomUUID(),
             dayOfWeek: day,
+            ...(trimmedTodos.length > 0 ? { todos: copyTodos(trimmedTodos) } : {}),
           })),
       );
       addEvents(dailyEvents);
@@ -168,6 +185,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
           メモ
           <textarea value={note} onChange={(change) => setNote(change.target.value)} rows={3} />
         </label>
+        <TodoEditor todos={todos} onChange={setTodos} />
         <div className="event-edit-actions">
           <button type="submit">保存</button>
           {!isEdit ? (
@@ -181,7 +199,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
               className="event-edit-delete"
               onClick={() => {
                 removeEvent(parsed.id);
-                router.back();
+                router.home();
               }}
             >
               削除
@@ -193,5 +211,47 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
         </div>
       </form>
     </section>
+  );
+}
+
+function TodoEditor({ todos, onChange }: { todos: EventTodo[]; onChange: (todos: EventTodo[]) => void }) {
+  return (
+    <fieldset className="event-edit-todos">
+      <legend>やること</legend>
+      <ul className="event-edit-todo-list">
+        {todos.map((todo, index) => (
+          <li key={todo.id} className="event-edit-todo-row">
+            <label>
+              項目 {index + 1}
+              <input
+                value={todo.title}
+                onChange={(change) => {
+                  const title = change.target.value;
+                  onChange(todos.map((item) => (item.id === todo.id ? { ...item, title } : item)));
+                }}
+                autoComplete="off"
+              />
+            </label>
+            <button
+              type="button"
+              className="event-edit-todo-remove"
+              onClick={() => {
+                onChange(todos.filter((item) => item.id !== todo.id));
+              }}
+            >
+              削除
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        onClick={() => {
+          onChange([...todos, { id: crypto.randomUUID(), title: "" }]);
+        }}
+      >
+        やることを追加
+      </button>
+    </fieldset>
   );
 }

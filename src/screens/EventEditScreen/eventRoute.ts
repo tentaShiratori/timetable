@@ -10,14 +10,24 @@ export function newEventPath(dayOfWeek: DayOfWeek, startMinutes: number): string
 /**
  * @public
  */
-export function editEventPath(id: string): string {
+export function detailEventPath(id: string): string {
   return `/event/${encodeURIComponent(id)}`;
+}
+
+/**
+ * @public
+ */
+export function editEventPath(id: string): string {
+  return `/event/${encodeURIComponent(id)}/edit`;
 }
 
 export type ParsedEventRoute =
   | { mode: "create"; dayOfWeek: DayOfWeek; startMinutes: number }
   | { mode: "edit"; id: string };
 
+/**
+ * @public
+ */
 export function parseEventRoute(path: string): ParsedEventRoute | null {
   const createMatch = /^\/event\/new\/(\d+)\/(\d+)$/.exec(path);
   if (createMatch) {
@@ -28,9 +38,20 @@ export function parseEventRoute(path: string): ParsedEventRoute | null {
     }
     return null;
   }
-  const editMatch = /^\/event\/([^/]+)$/.exec(path);
+  const editMatch = /^\/event\/([^/]+)\/edit$/.exec(path);
   if (editMatch && editMatch[1] !== "new") {
     return { mode: "edit", id: decodeURIComponent(editMatch[1]) };
   }
   return null;
+}
+
+/**
+ * @public
+ */
+export function parseDetailEventRoute(path: string): { id: string } | null {
+  const match = /^\/event\/([^/]+)$/.exec(path);
+  if (!match || match[1] === "new") {
+    return null;
+  }
+  return { id: decodeURIComponent(match[1]) };
 }

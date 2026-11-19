@@ -23,7 +23,7 @@ describe("WeekScreen", () => {
     expect(screen.getByLabelText("開始")).toHaveValue(String(9 * 60));
   });
 
-  it("予定をタップすると編集画面を開く", async () => {
+  it("予定をタップすると詳細画面を開く", async () => {
     const user = userEvent.setup();
     appFiles.set(
       "events",
@@ -39,8 +39,9 @@ describe("WeekScreen", () => {
     );
     renderApp(<App />);
     await user.click(await screen.findByRole("button", { name: "数学" }));
-    expect(await screen.findByRole("heading", { name: "予定を編集" })).toBeInTheDocument();
-    expect(screen.getByLabelText("タイトル")).toHaveValue("数学");
+    expect(await screen.findByRole("heading", { name: "数学" })).toBeInTheDocument();
+    expect(screen.getByText("月曜 9:00〜10:00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "編集" })).toBeInTheDocument();
   });
   it("今日の曜日がハイライトされる", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-08-26") });
