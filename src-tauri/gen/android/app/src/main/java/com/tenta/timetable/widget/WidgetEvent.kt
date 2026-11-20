@@ -30,32 +30,62 @@ internal fun eventsVersion(context: Context): Long {
 
 private fun eventsFile(context: Context): File = File(context.dataDir, "events.json")
 
-/** フロントの parseEvents と同じく、壊れた行は捨てる。 */
+/**
+ * フロントの parseEvents / toOccurrences と同じく、壊れた行は捨てて曜日ごとに展開する。
+ * 古い dayOfWeek 形式も読む。
+ */
 internal fun parseEvents(raw: String): List<WidgetEvent> {
   val array = runCatching { JSONArray(raw) }.getOrNull() ?: return emptyList()
   val events = mutableListOf<WidgetEvent>()
   for (index in 0 until array.length()) {
     val json = array.optJSONObject(index) ?: continue
-    val event = toEvent(json) ?: continue
-    events += event
+    events += toEvents(json)
   }
   return events
 }
 
-private fun toEvent(json: JSONObject): WidgetEvent? {
+private fun toEvents(json: JSONObject): List<WidgetEvent> {
   val id = json.optString("id")
   val title = json.optString("title").trim()
   if (id.isEmpty() || title.isEmpty()) {
+    return emptyList()
+  }
+  val startMinutes = json.optInt("startMinutes", -1)
+  val endMinutes = json.optInt("endMinutes", -1)
+  if (startMinutes < 0 || endMinutes > DAY_MINUTES || endMinutes <= startMinutes) {
+    return emptyList()
+  }
+  val days = parseDaysOfWeek(json) ?: return emptyList()
+  return days.map { dayOfWeek -> WidgetEvent(id, title, dayOfWeek, startMinutes, endMinutes) }
+}
+
+private fun parseDaysOfWeek(json: JSONObject): List<Int>? {
+  if (json.has("daysOfWeek")) {
+    val array = json.optJSONArray("daysOfWeek") ?: return null
+    if (array.length() == 0) {
+      return null
+    }
+    val days = mutableListOf<Int>()
+    val seen = mutableSetOf<Int>()
+    for (index in 0 until array.length()) {
+      val value = array.opt(index)
+      if (value !is Number) {
+        return null
+      }
+      val day = value.toInt()
+      if (day < 0 || day > 6 || !seen.add(day)) {
+        return null
+      }
+      days += day
+    }
+    return days.sorted()
+  }
+  if (!json.has("dayOfWeek")) {
     return null
   }
   val dayOfWeek = json.optInt("dayOfWeek", -1)
   if (dayOfWeek < 0 || dayOfWeek > 6) {
     return null
   }
-  val startMinutes = json.optInt("startMinutes", -1)
-  val endMinutes = json.optInt("endMinutes", -1)
-  if (startMinutes < 0 || endMinutes > DAY_MINUTES || endMinutes <= startMinutes) {
-    return null
-  }
-  return WidgetEvent(id, title, dayOfWeek, startMinutes, endMinutes)
+  return listOf(dayOfWeek)
 }

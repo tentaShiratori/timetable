@@ -75,6 +75,27 @@ class WidgetGridTest {
   }
 
   @Test
+  fun parseEventsはdaysOfWeekを曜日ごとに展開する() {
+    val raw = """
+      [{"id":"club","title":"部活","daysOfWeek":[1,2],"startMinutes":1080,"endMinutes":1140}]
+    """
+    val events = parseEvents(raw)
+
+    assertEquals(listOf(1, 2), events.map { it.dayOfWeek })
+    assertEquals(listOf("club", "club"), events.map { it.id })
+  }
+
+  @Test
+  fun parseEventsは古いdayOfWeek形式も読む() {
+    val raw = """
+      [{"id":"math","title":"数学","dayOfWeek":1,"startMinutes":540,"endMinutes":600}]
+    """
+    val events = parseEvents(raw)
+
+    assertEquals(listOf(WidgetEvent("math", "数学", 1, 540, 600)), events)
+  }
+
+  @Test
   fun parseEventsはJSONでない文字列を空として扱う() {
     assertEquals(emptyList<WidgetEvent>(), parseEvents("これはJSONではない"))
   }

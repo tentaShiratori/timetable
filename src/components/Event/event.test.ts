@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { formatMinutes, parseEvents, resetExpiredTodos, validateEvent } from "./event";
+import {
+  formatDaysOfWeek,
+  formatMinutes,
+  resetExpiredTodos,
+  toOccurrences,
+  validateEvent,
+} from "./event";
+import { parseEvents } from "./parseEvents";
 
 describe("validateEvent", () => {
   const valid = {
     title: "数学",
-    dayOfWeek: 0,
+    daysOfWeek: [0],
     startMinutes: 9 * 60,
     endMinutes: 10 * 60,
   };
@@ -15,6 +22,18 @@ describe("validateEvent", () => {
 
   it("タイトルが空ならエラー", () => {
     expect(validateEvent({ ...valid, title: "  " })).toContain("タイトルを入力してください");
+  });
+
+  it("曜日が空ならエラー", () => {
+    expect(validateEvent({ ...valid, daysOfWeek: [] })).toContain("曜日を選んでください");
+  });
+
+  it("曜日が重複ならエラー", () => {
+    expect(validateEvent({ ...valid, daysOfWeek: [1, 1] })).toContain("曜日が重複しています");
+  });
+
+  it("範囲外の曜日ならエラー", () => {
+    expect(validateEvent({ ...valid, daysOfWeek: [7] })).toContain("曜日が不正です");
   });
 
   it("終了が開始以前ならエラー", () => {
@@ -49,6 +68,43 @@ describe("formatMinutes", () => {
   });
 });
 
+describe("formatDaysOfWeek", () => {
+  it("曜日を小さい順に並べてつなぐ", () => {
+    expect(formatDaysOfWeek([2, 1])).toBe("月曜・火曜");
+  });
+});
+
+describe("toOccurrences", () => {
+  it("予定を曜日ごとのコマに展開する", () => {
+    expect(
+      toOccurrences([
+        {
+          id: "club",
+          title: "部活",
+          daysOfWeek: [1, 2],
+          startMinutes: 18 * 60,
+          endMinutes: 19 * 60,
+        },
+      ]),
+    ).toEqual([
+      {
+        eventId: "club",
+        dayOfWeek: 1,
+        startMinutes: 18 * 60,
+        endMinutes: 19 * 60,
+        title: "部活",
+      },
+      {
+        eventId: "club",
+        dayOfWeek: 2,
+        startMinutes: 18 * 60,
+        endMinutes: 19 * 60,
+        title: "部活",
+      },
+    ]);
+  });
+});
+
 describe("parseEvents", () => {
   it("空や不正な JSON は空配列にする", () => {
     expect(parseEvents(null)).toEqual([]);
@@ -59,10 +115,36 @@ describe("parseEvents", () => {
 
   it("妥当な予定だけ残す", () => {
     const raw = JSON.stringify([
-      { id: "1", title: "英語", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 },
-      { id: "2", title: "", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 },
+      { id: "1", title: "英語", daysOfWeek: [1], startMinutes: 540, endMinutes: 600 },
+      { id: "2", title: "", daysOfWeek: [1], startMinutes: 540, endMinutes: 600 },
     ]);
-    expect(parseEvents(raw)).toEqual([{ id: "1", title: "英語", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 }]);
+    expect(parseEvents(raw)).toEqual([
+      { id: "1", title: "英語", daysOfWeek: [1], startMinutes: 540, endMinutes: 600 },
+    ]);
+  });
+
+  it("古い dayOfWeek 形式を daysOfWeek に直す", () => {
+    const raw = JSON.stringify([{ id: "1", title: "英語", dayOfWeek: 1, startMinutes: 540, endMinutes: 600 }]);
+    expect(parseEvents(raw)).toEqual([
+      { id: "1", title: "英語", daysOfWeek: [1], startMinutes: 540, endMinutes: 600 },
+    ]);
+  });
+
+  it("daysOfWeek は小さい順に並べる", () => {
+    const raw = JSON.stringify([
+      { id: "1", title: "英語", daysOfWeek: [3, 1], startMinutes: 540, endMinutes: 600 },
+    ]);
+    expect(parseEvents(raw)[0]?.daysOfWeek).toEqual([1, 3]);
+  });
+
+  it("空・重複・範囲外の曜日は捨てる", () => {
+    const raw = JSON.stringify([
+      { id: "empty", title: "空", daysOfWeek: [], startMinutes: 540, endMinutes: 600 },
+      { id: "dup", title: "重複", daysOfWeek: [1, 1], startMinutes: 540, endMinutes: 600 },
+      { id: "bad", title: "範囲外", daysOfWeek: [9], startMinutes: 540, endMinutes: 600 },
+      { id: "ok", title: "英語", daysOfWeek: [1], startMinutes: 540, endMinutes: 600 },
+    ]);
+    expect(parseEvents(raw).map((event) => event.id)).toEqual(["ok"]);
   });
 
   it("todos がない既存データも読める", () => {
@@ -75,7 +157,7 @@ describe("parseEvents", () => {
       {
         id: "1",
         title: "英語",
-        dayOfWeek: 1,
+        daysOfWeek: [1],
         startMinutes: 540,
         endMinutes: 600,
         todos: [

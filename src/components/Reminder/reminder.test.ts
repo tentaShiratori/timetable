@@ -6,7 +6,7 @@ function event(overrides: Partial<Event> = {}): Event {
   return {
     id: "math",
     title: "数学",
-    dayOfWeek: 1,
+    daysOfWeek: [1],
     startMinutes: 9 * 60,
     endMinutes: 10 * 60,
     ...overrides,
@@ -15,11 +15,11 @@ function event(overrides: Partial<Event> = {}): Event {
 
 describe("reminderFireAt", () => {
   it("開始の10分前をプラグインの weekday・時・分にする", () => {
-    expect(reminderFireAt(event())).toEqual({ weekday: 2, hour: 8, minute: 50 });
+    expect(reminderFireAt(event(), 1)).toEqual({ weekday: 2, hour: 8, minute: 50 });
   });
 
   it("日曜はプラグインの weekday 1 にする", () => {
-    expect(reminderFireAt(event({ dayOfWeek: 0, startMinutes: 9 * 60 }))).toEqual({
+    expect(reminderFireAt(event({ startMinutes: 9 * 60 }), 0)).toEqual({
       weekday: 1,
       hour: 8,
       minute: 50,
@@ -27,12 +27,12 @@ describe("reminderFireAt", () => {
   });
 
   it("0:00を跨ぐときは前日の23:50台にする", () => {
-    expect(reminderFireAt(event({ dayOfWeek: 1, startMinutes: 5 }))).toEqual({
+    expect(reminderFireAt(event({ startMinutes: 5 }), 1)).toEqual({
       weekday: 1,
       hour: 23,
       minute: 55,
     });
-    expect(reminderFireAt(event({ dayOfWeek: 0, startMinutes: 5 }))).toEqual({
+    expect(reminderFireAt(event({ startMinutes: 5 }), 0)).toEqual({
       weekday: 7,
       hour: 23,
       minute: 55,
@@ -40,7 +40,7 @@ describe("reminderFireAt", () => {
   });
 
   it("ちょうど10分の開始は同じ日の0:00にする", () => {
-    expect(reminderFireAt(event({ startMinutes: 10 }))).toEqual({ weekday: 2, hour: 0, minute: 0 });
+    expect(reminderFireAt(event({ startMinutes: 10 }), 1)).toEqual({ weekday: 2, hour: 0, minute: 0 });
   });
 });
 
@@ -51,8 +51,12 @@ describe("reminderBody", () => {
 });
 
 describe("reminderNotificationId", () => {
-  it("同じ予定 id は同じ 32bit 整数にする", () => {
-    expect(reminderNotificationId("math")).toBe(reminderNotificationId("math"));
-    expect(reminderNotificationId("")).toBe(1);
+  it("同じ予定 id と曜日は同じ 32bit 整数にする", () => {
+    expect(reminderNotificationId("math", 1)).toBe(reminderNotificationId("math", 1));
+    expect(reminderNotificationId("math", 1)).not.toBe(0);
+  });
+
+  it("曜日が違えば別の id になる", () => {
+    expect(reminderNotificationId("math", 1)).not.toBe(reminderNotificationId("math", 2));
   });
 });

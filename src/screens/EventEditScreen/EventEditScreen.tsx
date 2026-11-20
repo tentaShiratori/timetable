@@ -1,16 +1,16 @@
 import { SubmitEvent, useState } from "react";
 import {
-  DAY_LABEL_ORDER,
-  DAY_LABELS,
   DAY_MINUTES,
-  DayOfWeek,
   formatMinutes,
+  sortDaysOfWeek,
   validateEvent,
+  type DayOfWeek,
   type Event,
   type EventTodo,
 } from "../../components/Event/event";
 import { useEvents } from "../../components/Event/useEvents";
 import { useRouter } from "../../components/Route/useRouter";
+import { DayOfWeekPicker } from "./DayOfWeekPicker";
 import { parseEventRoute, type ParsedEventRoute } from "./eventRoute";
 
 /**
@@ -46,22 +46,14 @@ function withCurrent(choices: number[], current: number): number[] {
   return [...choices, current].sort((a, b) => a - b);
 }
 
-function copyTodos(todos: EventTodo[]): EventTodo[] {
-  return todos.map((todo) => ({
-    id: crypto.randomUUID(),
-    title: todo.title,
-    ...(todo.completedAt !== undefined ? { completedAt: todo.completedAt } : {}),
-  }));
-}
-
 function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
-  const { events, addEvent, addEvents, updateEvent, removeEvent } = useEvents();
+  const { events, addEvent, updateEvent, removeEvent } = useEvents();
   const router = useRouter();
   const existing = parsed.mode === "edit" ? events.find((event) => event.id === parsed.id) : undefined;
 
   const [title, setTitle] = useState(existing?.title ?? "");
-  const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek>(
-    parsed.mode === "create" ? parsed.dayOfWeek : (existing?.dayOfWeek ?? 0),
+  const [daysOfWeek, setDaysOfWeek] = useState<DayOfWeek[]>(
+    parsed.mode === "create" ? [parsed.dayOfWeek] : sortDaysOfWeek(existing?.daysOfWeek ?? []),
   );
   const [startMinutes, setStartMinutes] = useState(
     parsed.mode === "create" ? parsed.startMinutes : (existing?.startMinutes ?? 8 * 60),
@@ -89,10 +81,9 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
 
   async function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    const isDaily = event.nativeEvent.submitter?.dataset.daily === "true";
     const draft = {
       title,
-      dayOfWeek,
+      daysOfWeek,
       startMinutes,
       endMinutes,
       note: note.trim() === "" ? undefined : note,
@@ -110,7 +101,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
     const nextEvent: Event = {
       id: existing?.id ?? crypto.randomUUID(),
       title: title.trim(),
-      dayOfWeek,
+      daysOfWeek: sortDaysOfWeek(daysOfWeek),
       startMinutes,
       endMinutes,
       note: draft.note,
@@ -118,18 +109,6 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
     };
     if (isEdit) {
       updateEvent(nextEvent);
-    } else if (isDaily) {
-      const dailyEvents = [nextEvent].concat(
-        [0, 1, 2, 3, 4, 5, 6]
-          .filter((day): day is DayOfWeek => day !== dayOfWeek)
-          .map((day) => ({
-            ...nextEvent,
-            id: crypto.randomUUID(),
-            dayOfWeek: day,
-            ...(trimmedTodos.length > 0 ? { todos: copyTodos(trimmedTodos) } : {}),
-          })),
-      );
-      addEvents(dailyEvents);
     } else {
       addEvent(nextEvent);
     }
@@ -151,16 +130,7 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
           タイトル
           <input value={title} onChange={(change) => setTitle(change.target.value)} autoComplete="off" />
         </label>
-        <label>
-          曜日
-          <select value={dayOfWeek} onChange={(change) => setDayOfWeek(Number(change.target.value) as DayOfWeek)}>
-            {DAY_LABEL_ORDER.map((day) => (
-              <option key={day} value={day}>
-                {DAY_LABELS[day]}曜
-              </option>
-            ))}
-          </select>
-        </label>
+        <DayOfWeekPicker value={daysOfWeek} onChange={setDaysOfWeek} />
         <label>
           開始
           <select value={startMinutes} onChange={(change) => setStartMinutes(Number(change.target.value))}>
@@ -188,11 +158,6 @@ function EventEditForm({ parsed }: { parsed: ParsedEventRoute }) {
         <TodoEditor todos={todos} onChange={setTodos} />
         <div className="event-edit-actions">
           <button type="submit">保存</button>
-          {!isEdit ? (
-            <button type="submit" data-daily="true">
-              保存（毎日）
-            </button>
-          ) : null}
           {isEdit ? (
             <button
               type="button"
@@ -226,8 +191,8 @@ function TodoEditor({ todos, onChange }: { todos: EventTodo[]; onChange: (todos:
               <input
                 value={todo.title}
                 onChange={(change) => {
-                  const title = change.target.value;
-                  onChange(todos.map((item) => (item.id === todo.id ? { ...item, title } : item)));
+                  const nextTitle = change.target.value;
+                  onChange(todos.map((item) => (item.id === todo.id ? { ...item, title: nextTitle } : item)));
                 }}
                 autoComplete="off"
               />

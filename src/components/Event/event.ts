@@ -27,7 +27,7 @@ export type EventTodo = {
 export type Event = {
   id: string;
   title: string;
-  dayOfWeek: DayOfWeek;
+  daysOfWeek: DayOfWeek[];
   startMinutes: number;
   endMinutes: number;
   note?: string;
@@ -39,11 +39,22 @@ export type Event = {
  */
 export type EventDraft = {
   title: string;
-  dayOfWeek: number;
+  daysOfWeek: number[];
   startMinutes: number;
   endMinutes: number;
   note?: string;
   todos?: EventTodo[];
+};
+
+/**
+ * @public
+ */
+export type Occurrence = {
+  eventId: string;
+  dayOfWeek: DayOfWeek;
+  startMinutes: number;
+  endMinutes: number;
+  title: string;
 };
 
 /**
@@ -82,8 +93,44 @@ export const DAY_LABEL_ORDER = [
 /**
  * @public
  */
+export const WEEKDAY_DAYS: DayOfWeek[] = [
+  DayOfWeek.MONDAY,
+  DayOfWeek.TUESDAY,
+  DayOfWeek.WEDNESDAY,
+  DayOfWeek.THURSDAY,
+  DayOfWeek.FRIDAY,
+];
+
+/**
+ * @public
+ */
+export const WEEKEND_DAYS: DayOfWeek[] = [DayOfWeek.SUNDAY, DayOfWeek.SATURDAY];
+
+/**
+ * @public
+ */
+export const EVERY_DAY: DayOfWeek[] = [
+  DayOfWeek.SUNDAY,
+  DayOfWeek.MONDAY,
+  DayOfWeek.TUESDAY,
+  DayOfWeek.WEDNESDAY,
+  DayOfWeek.THURSDAY,
+  DayOfWeek.FRIDAY,
+  DayOfWeek.SATURDAY,
+];
+
+/**
+ * @public
+ */
 export function isDayOfWeek(value: number): value is DayOfWeek {
   return Object.values(DayOfWeek).includes(value as never);
+}
+
+/**
+ * @public
+ */
+export function sortDaysOfWeek(days: DayOfWeek[]): DayOfWeek[] {
+  return [...days].sort((a, b) => a - b);
 }
 
 /**
@@ -94,8 +141,21 @@ export function validateEvent(draft: EventDraft): string[] {
   if (draft.title.trim() === "") {
     errors.push("タイトルを入力してください");
   }
-  if (!isDayOfWeek(draft.dayOfWeek)) {
-    errors.push("曜日が不正です");
+  if (draft.daysOfWeek.length === 0) {
+    errors.push("曜日を選んでください");
+  } else {
+    const seen = new Set<number>();
+    for (const day of draft.daysOfWeek) {
+      if (!isDayOfWeek(day)) {
+        errors.push("曜日が不正です");
+        break;
+      }
+      if (seen.has(day)) {
+        errors.push("曜日が重複しています");
+        break;
+      }
+      seen.add(day);
+    }
   }
   if (!Number.isFinite(draft.startMinutes) || !Number.isFinite(draft.endMinutes)) {
     errors.push("時刻が不正です");
@@ -128,6 +188,15 @@ export function formatMinutes(minutes: number): string {
 /**
  * @public
  */
+export function formatDaysOfWeek(days: DayOfWeek[]): string {
+  return sortDaysOfWeek(days)
+    .map((day) => `${DAY_LABELS[day]}曜`)
+    .join("・");
+}
+
+/**
+ * @public
+ */
 export function resetExpiredTodos(todos: EventTodo[], now: number): EventTodo[] {
   return todos.map((todo) => {
     if (todo.completedAt === undefined) {
@@ -143,87 +212,14 @@ export function resetExpiredTodos(todos: EventTodo[], now: number): EventTodo[] 
 /**
  * @public
  */
-export function parseEvents(raw: string | null): Event[] {
-  if (raw === null || raw === "") {
-    return [];
-  }
-  try {
-    const data: unknown = JSON.parse(raw);
-    if (!Array.isArray(data)) {
-      return [];
-    }
-    return data.flatMap((item) => {
-      const event = toStoredEvent(item);
-      return event ? [event] : [];
-    });
-  } catch {
-    return [];
-  }
-}
-
-function toStoredEvent(value: unknown): Event | null {
-  if (typeof value !== "object" || value === null) {
-    return null;
-  }
-  const record = value as Record<string, unknown>;
-  if (typeof record.id !== "string" || record.id === "") {
-    return null;
-  }
-  const draft: EventDraft = {
-    title: typeof record.title === "string" ? record.title : "",
-    dayOfWeek: typeof record.dayOfWeek === "number" ? record.dayOfWeek : -1,
-    startMinutes: typeof record.startMinutes === "number" ? record.startMinutes : Number.NaN,
-    endMinutes: typeof record.endMinutes === "number" ? record.endMinutes : Number.NaN,
-    note: typeof record.note === "string" ? record.note : undefined,
-  };
-  if (validateEvent(draft).length > 0 || !isDayOfWeek(draft.dayOfWeek)) {
-    return null;
-  }
-  const todos = parseTodos(record.todos);
-  return {
-    id: record.id,
-    title: draft.title,
-    dayOfWeek: draft.dayOfWeek,
-    startMinutes: draft.startMinutes,
-    endMinutes: draft.endMinutes,
-    ...(draft.note !== undefined ? { note: draft.note } : {}),
-    ...(todos !== undefined ? { todos } : {}),
-  };
-}
-
-function parseTodos(value: unknown): EventTodo[] | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-  const todos: EventTodo[] = [];
-  for (const item of value) {
-    const todo = toStoredTodo(item);
-    if (todo) {
-      todos.push(todo);
-    }
-  }
-  return todos;
-}
-
-function toStoredTodo(value: unknown): EventTodo | null {
-  if (typeof value !== "object" || value === null) {
-    return null;
-  }
-  const record = value as Record<string, unknown>;
-  if (typeof record.id !== "string" || record.id === "") {
-    return null;
-  }
-  if (typeof record.title !== "string" || record.title.trim() === "") {
-    return null;
-  }
-  if (record.completedAt === undefined) {
-    return { id: record.id, title: record.title };
-  }
-  if (typeof record.completedAt !== "number" || !Number.isFinite(record.completedAt)) {
-    return { id: record.id, title: record.title };
-  }
-  return { id: record.id, title: record.title, completedAt: record.completedAt };
+export function toOccurrences(events: Event[]): Occurrence[] {
+  return events.flatMap((event) =>
+    event.daysOfWeek.map((dayOfWeek) => ({
+      eventId: event.id,
+      dayOfWeek,
+      startMinutes: event.startMinutes,
+      endMinutes: event.endMinutes,
+      title: event.title,
+    })),
+  );
 }

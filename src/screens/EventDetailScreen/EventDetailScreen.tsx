@@ -1,4 +1,4 @@
-import { DAY_LABELS, formatMinutes, type EventTodo } from "../../components/Event/event";
+import { formatDaysOfWeek, formatMinutes, type EventTodo } from "../../components/Event/event";
 import { useEvents } from "../../components/Event/useEvents";
 import { useRouter } from "../../components/Route/useRouter";
 import { editEventPath, parseDetailEventRoute } from "../EventEditScreen/eventRoute";
@@ -44,7 +44,7 @@ function EventDetailBody({ id }: { id: string }) {
     <section className="event-detail">
       <h1>{current.title}</h1>
       <p className="event-detail-when">
-        {DAY_LABELS[current.dayOfWeek]}曜 {formatMinutes(current.startMinutes)}〜{formatMinutes(current.endMinutes)}
+        {`${formatDaysOfWeek(current.daysOfWeek)} ${formatMinutes(current.startMinutes)}〜${formatMinutes(current.endMinutes)}`}
       </p>
       {current.note ? <p className="event-detail-note">{current.note}</p> : null}
       <TodoChecklist todos={todos} onToggle={toggleTodo} />
