@@ -15,7 +15,7 @@ import { syncReminders } from "./syncReminders";
 const math: Event = {
   id: "math",
   title: "数学",
-  dayOfWeek: 1,
+  daysOfWeek: [1],
   startMinutes: 9 * 60,
   endMinutes: 10 * 60,
 };
@@ -23,9 +23,17 @@ const math: Event = {
 const english: Event = {
   id: "english",
   title: "英語",
-  dayOfWeek: 2,
+  daysOfWeek: [2],
   startMinutes: 10 * 60,
   endMinutes: 11 * 60,
+};
+
+const club: Event = {
+  id: "club",
+  title: "部活",
+  daysOfWeek: [1, 2],
+  startMinutes: 18 * 60,
+  endMinutes: 19 * 60,
 };
 
 function enableTauri(): void {
@@ -70,7 +78,7 @@ describe("syncReminders", () => {
     expect(vi.mocked(createChannel)).toHaveBeenCalledWith(expect.objectContaining({ id: REMINDER_CHANNEL_ID }));
     expect(vi.mocked(cancel)).not.toHaveBeenCalled();
     expect(vi.mocked(sendNotification)).toHaveBeenCalledWith({
-      id: reminderNotificationId("math"),
+      id: reminderNotificationId("math", 1),
       title: "数学",
       body: "10分後に開始（9:00〜10:00）",
       channelId: REMINDER_CHANNEL_ID,
@@ -84,9 +92,19 @@ describe("syncReminders", () => {
         every: undefined,
       },
     });
-    expect(await loadScheduledIds()).toEqual([reminderNotificationId("math")]);
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("math", 1)]);
     expect(alarmPermission.checked).toBe(true);
     expect(alarmPermission.requested).toBe(false);
+  });
+
+  it("選んだ曜日それぞれに通知を登録する", async () => {
+    vi.mocked(isPermissionGranted).mockResolvedValue(true);
+    await syncReminders([club]);
+    expect(vi.mocked(sendNotification)).toHaveBeenCalledTimes(2);
+    expect(await loadScheduledIds()).toEqual([
+      reminderNotificationId("club", 1),
+      reminderNotificationId("club", 2),
+    ]);
   });
 
   it("アラーム許可が無ければ設定画面を開き、通知は組む", async () => {
@@ -102,8 +120,16 @@ describe("syncReminders", () => {
     vi.mocked(isPermissionGranted).mockResolvedValue(true);
     await syncReminders([math, english]);
     await syncReminders([english]);
-    expect(vi.mocked(cancel)).toHaveBeenCalledWith([reminderNotificationId("math")]);
-    expect(await loadScheduledIds()).toEqual([reminderNotificationId("english")]);
+    expect(vi.mocked(cancel)).toHaveBeenCalledWith([reminderNotificationId("math", 1)]);
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("english", 2)]);
+  });
+
+  it("曜日を外したときはその分の通知を取り消す", async () => {
+    vi.mocked(isPermissionGranted).mockResolvedValue(true);
+    await syncReminders([club]);
+    await syncReminders([{ ...club, daysOfWeek: [1] }]);
+    expect(vi.mocked(cancel)).toHaveBeenCalledWith([reminderNotificationId("club", 2)]);
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("club", 1)]);
   });
 
   it("cancel に失敗したら消した予定の id を残す", async () => {
@@ -111,10 +137,10 @@ describe("syncReminders", () => {
     await syncReminders([math]);
     vi.mocked(cancel).mockRejectedValueOnce(new Error("lateinit"));
     await syncReminders([]);
-    expect(await loadScheduledIds()).toEqual([reminderNotificationId("math")]);
+    expect(await loadScheduledIds()).toEqual([reminderNotificationId("math", 1)]);
     vi.mocked(cancel).mockResolvedValueOnce(undefined);
     await syncReminders([]);
-    expect(vi.mocked(cancel)).toHaveBeenLastCalledWith([reminderNotificationId("math")]);
+    expect(vi.mocked(cancel)).toHaveBeenLastCalledWith([reminderNotificationId("math", 1)]);
     expect(await loadScheduledIds()).toEqual([]);
   });
 });

@@ -19,7 +19,7 @@ describe("WeekScreen", () => {
     renderApp(<App />);
     await user.click(await screen.findByRole("button", { name: "火曜 9:00 に追加" }));
     expect(await screen.findByRole("heading", { name: "予定を追加" })).toBeInTheDocument();
-    expect(screen.getByLabelText("曜日")).toHaveValue("2");
+    expect(screen.getByRole("button", { name: "火" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("開始")).toHaveValue(String(9 * 60));
   });
 
@@ -31,7 +31,7 @@ describe("WeekScreen", () => {
         {
           id: "math",
           title: "数学",
-          dayOfWeek: 1,
+          daysOfWeek: [1],
           startMinutes: 9 * 60,
           endMinutes: 10 * 60,
         },
@@ -43,6 +43,33 @@ describe("WeekScreen", () => {
     expect(screen.getByText("月曜 9:00〜10:00")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "編集" })).toBeInTheDocument();
   });
+
+  it("複数曜日の予定はそれぞれのコマに出て同じ詳細を開く", async () => {
+    const user = userEvent.setup();
+    appFiles.set(
+      "events",
+      JSON.stringify([
+        {
+          id: "club",
+          title: "部活",
+          daysOfWeek: [1, 2],
+          startMinutes: 18 * 60,
+          endMinutes: 19 * 60,
+        },
+      ]),
+    );
+    renderApp(<App />);
+    const blocks = await screen.findAllByRole("button", { name: "部活" });
+    expect(blocks).toHaveLength(2);
+    await user.click(blocks[0]!);
+    expect(await screen.findByRole("heading", { name: "部活" })).toBeInTheDocument();
+    expect(screen.getByText("月曜・火曜 18:00〜19:00")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "戻る" }));
+    await user.click((await screen.findAllByRole("button", { name: "部活" }))[1]!);
+    expect(await screen.findByRole("heading", { name: "部活" })).toBeInTheDocument();
+    expect(screen.getByText("月曜・火曜 18:00〜19:00")).toBeInTheDocument();
+  });
+
   it("今日の曜日がハイライトされる", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-08-26") });
     renderApp(<App />);

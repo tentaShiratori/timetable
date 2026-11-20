@@ -1,7 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { atom, useAtom } from "jotai";
 import { useEffect } from "react";
-import { parseEvents, resetExpiredTodos, type Event } from "./event";
+import { resetExpiredTodos, type Event } from "./event";
+import { parseEvents } from "./parseEvents";
 
 const EVENTS_KIND = "events";
 
@@ -52,7 +53,6 @@ type UseEvents = {
   events: Event[];
   ready: boolean;
   addEvent: (event: Event) => void;
-  addEvents: (events: Event[]) => void;
   updateEvent: (event: Event) => void;
   removeEvent: (id: string) => void;
 };
@@ -113,11 +113,6 @@ export function useEvents(): UseEvents {
     ready,
     addEvent: async (event) => {
       const next = [...events, event];
-      setEvents(next);
-      await saveEventsFile(next);
-    },
-    addEvents: async (newEvents) => {
-      const next = [...events, ...newEvents];
       setEvents(next);
       await saveEventsFile(next);
     },

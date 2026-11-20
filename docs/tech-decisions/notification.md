@@ -43,9 +43,9 @@ Doze 中でも 10 分前に近づけたいので `allowWhileIdle: true` にす�
 
 `SCHEDULE_EXACT_ALARM` はランタイム権限ではない。アプリ内に許可ダイアログは出せず、未許可なら `Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM` で設定画面を開く。実装は Kotlin の `AlarmPermissionPlugin`（`isPermissionGranted` / `requestPermission`）を、Rust の `is_alarm_permission_granted` / `request_alarm_permission` から呼ぶ。フロントは通知と同じく、確認してから未許可のときだけリクエストする。同一プロセスでは設定画面を一度だけ開く。許可が取れなくても通知自体は組む（inexact に落ちる）。
 
-### 通知の identifer
+### 通知の identifier
 
-プラグインは 32-bit 整数の `id` しか受けない。予定の UUID を安定なハッシュにして、同じ予定の再登録で上書きされるようにする。消した予定の id は `cancel(ids)` が通るまで `reminder_ids.json` に残す。
+プラグインは 32-bit 整数の `id` しか受けない。予定の UUID と曜日を組み合わせた文字列（`{eventId}:{dayOfWeek}`）を安定なハッシュにして、同じ予定・同じ曜日の再登録で上書きされるようにする。曜日を外した分や消した予定の id は `cancel(ids)` が通るまで `reminder_ids.json` に残す。
 
 ## 棄却したもの
 

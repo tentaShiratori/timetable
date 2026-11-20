@@ -13,7 +13,7 @@ describe("useEvents", () => {
   it("起動時に保存済みの予定を復元する", async () => {
     appFiles.set(
       "events",
-      JSON.stringify([{ id: "1", title: "国語", dayOfWeek: 1, startMinutes: 8 * 60, endMinutes: 9 * 60 }]),
+      JSON.stringify([{ id: "1", title: "国語", daysOfWeek: [1], startMinutes: 8 * 60, endMinutes: 9 * 60 }]),
     );
     renderApp(<App />);
     expect(await screen.findByRole("button", { name: "国語" })).toBeInTheDocument();
@@ -26,8 +26,28 @@ describe("useEvents", () => {
     await user.type(screen.getByLabelText("タイトル"), "帰宅");
     await user.click(screen.getByRole("button", { name: "保存" }));
     await screen.findByRole("button", { name: "帰宅" });
-    const saved = JSON.parse(appFiles.get("events") ?? "[]") as Array<{ title: string; dayOfWeek: number }>;
-    expect(saved.some((event) => event.title === "帰宅" && event.dayOfWeek === 5)).toBe(true);
+    const saved = JSON.parse(appFiles.get("events") ?? "[]") as Array<{ title: string; daysOfWeek: number[] }>;
+    expect(saved.some((event) => event.title === "帰宅" && event.daysOfWeek.includes(5))).toBe(true);
+  });
+
+  it("古い dayOfWeek 形式を読んで保存時に daysOfWeek にする", async () => {
+    const user = userEvent.setup();
+    appFiles.set(
+      "events",
+      JSON.stringify([{ id: "1", title: "国語", dayOfWeek: 1, startMinutes: 8 * 60, endMinutes: 9 * 60 }]),
+    );
+    renderApp(<App />);
+    await user.click(await screen.findByRole("button", { name: "国語" }));
+    await user.click(await screen.findByRole("button", { name: "編集" }));
+    await user.click(screen.getByRole("button", { name: "保存" }));
+    await waitFor(() => {
+      const saved = JSON.parse(appFiles.get("events") ?? "[]") as Array<{
+        daysOfWeek?: number[];
+        dayOfWeek?: number;
+      }>;
+      expect(saved[0]?.daysOfWeek).toEqual([1]);
+      expect(saved[0]?.dayOfWeek).toBeUndefined();
+    });
   });
 
   it("起動時に24時間以上たった todo を未完了に戻して保存する", async () => {
@@ -38,7 +58,7 @@ describe("useEvents", () => {
         {
           id: "1",
           title: "国語",
-          dayOfWeek: 1,
+          daysOfWeek: [1],
           startMinutes: 8 * 60,
           endMinutes: 9 * 60,
           todos: [
@@ -71,7 +91,7 @@ describe("useEvents", () => {
         {
           id: "1",
           title: "国語",
-          dayOfWeek: 1,
+          daysOfWeek: [1],
           startMinutes: 8 * 60,
           endMinutes: 9 * 60,
           todos: [{ id: "t1", title: "課題", completedAt: start }],

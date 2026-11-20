@@ -32,7 +32,9 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
   if (token !== syncToken) {
     return;
   }
-  const currentIds = events.map((event) => reminderNotificationId(event.id));
+  const currentIds = events.flatMap((event) =>
+    event.daysOfWeek.map((dayOfWeek) => reminderNotificationId(event.id, dayOfWeek)),
+  );
   const currentIdSet = new Set(currentIds);
   const deletedIds = storedIds.filter((id) => !currentIdSet.has(id));
   // 削除されたイベントの通知をcancelし、cancelに失敗したらidを残しておく
@@ -75,22 +77,24 @@ async function applyReminders(events: Event[], token: number): Promise<void> {
     return;
   }
   for (const event of events) {
-    const fireAt = reminderFireAt(event);
-    sendNotification({
-      id: reminderNotificationId(event.id),
-      title: event.title,
-      body: reminderBody(event),
-      channelId: REMINDER_CHANNEL_ID,
-      autoCancel: true,
-      schedule: Schedule.interval(
-        {
-          weekday: fireAt.weekday,
-          hour: fireAt.hour,
-          minute: fireAt.minute,
-        },
-        true,
-      ),
-    });
+    for (const dayOfWeek of event.daysOfWeek) {
+      const fireAt = reminderFireAt(event, dayOfWeek);
+      sendNotification({
+        id: reminderNotificationId(event.id, dayOfWeek),
+        title: event.title,
+        body: reminderBody(event),
+        channelId: REMINDER_CHANNEL_ID,
+        autoCancel: true,
+        schedule: Schedule.interval(
+          {
+            weekday: fireAt.weekday,
+            hour: fireAt.hour,
+            minute: fireAt.minute,
+          },
+          true,
+        ),
+      });
+    }
   }
   // 通知に登録してあるイベントをidを保存する
   await saveScheduledIds([...leftoverDeleted, ...currentIds]);

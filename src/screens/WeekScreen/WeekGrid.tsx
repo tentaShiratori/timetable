@@ -1,5 +1,13 @@
 import { useSyncExternalStore } from "react";
-import { DAY_LABEL_ORDER, DAY_LABELS, formatMinutes, type DayOfWeek, type Event } from "../../components/Event/event";
+import {
+  DAY_LABEL_ORDER,
+  DAY_LABELS,
+  formatMinutes,
+  toOccurrences,
+  type DayOfWeek,
+  type Event,
+  type Occurrence,
+} from "../../components/Event/event";
 import { eventColor, SLOT_COUNT, SLOT_HEIGHT_PX, slotStartMinutes } from "./grid";
 import { layoutDayEvents } from "./layout";
 
@@ -21,6 +29,7 @@ const dayStore = {
 export function WeekGrid({ events, onSlotClick, onEventClick }: WeekGridProps) {
   const bodyHeight = SLOT_COUNT * SLOT_HEIGHT_PX;
   const today = useSyncExternalStore(dayStore.subscribe, dayStore.getSnapshot);
+  const occurrences = toOccurrences(events);
 
   return (
     <div className="week-scroll">
@@ -50,7 +59,7 @@ export function WeekGrid({ events, onSlotClick, onEventClick }: WeekGridProps) {
             key={dayOfWeek}
             dayLabel={DAY_LABELS[dayOfWeek]}
             dayOfWeek={dayOfWeek}
-            events={events.filter((event) => event.dayOfWeek === dayOfWeek)}
+            occurrences={occurrences.filter((occurrence) => occurrence.dayOfWeek === dayOfWeek)}
             bodyHeight={bodyHeight}
             onSlotClick={onSlotClick}
             onEventClick={onEventClick}
@@ -64,14 +73,14 @@ export function WeekGrid({ events, onSlotClick, onEventClick }: WeekGridProps) {
 type DayColumnProps = {
   dayLabel: string;
   dayOfWeek: DayOfWeek;
-  events: Event[];
+  occurrences: Occurrence[];
   bodyHeight: number;
   onSlotClick: (dayOfWeek: DayOfWeek, startMinutes: number) => void;
   onEventClick: (id: string) => void;
 };
 
-function DayColumn({ dayLabel, dayOfWeek, events, bodyHeight, onSlotClick, onEventClick }: DayColumnProps) {
-  const blocks = layoutDayEvents(events);
+function DayColumn({ dayLabel, dayOfWeek, occurrences, bodyHeight, onSlotClick, onEventClick }: DayColumnProps) {
+  const blocks = layoutDayEvents(occurrences);
 
   return (
     <div className="week-day-col" style={{ height: bodyHeight }}>
@@ -90,7 +99,7 @@ function DayColumn({ dayLabel, dayOfWeek, events, bodyHeight, onSlotClick, onEve
       })}
       {blocks.map((block) => (
         <button
-          key={block.event.id}
+          key={block.occurrence.eventId}
           type="button"
           className="week-event"
           style={{
@@ -98,11 +107,11 @@ function DayColumn({ dayLabel, dayOfWeek, events, bodyHeight, onSlotClick, onEve
             height: block.height,
             left: `calc(${(block.columnIndex / block.columnCount) * 100}% + 1px)`,
             width: `calc(${(1 / block.columnCount) * 100}% - 2px)`,
-            background: eventColor(block.event.startMinutes),
+            background: eventColor(block.occurrence.startMinutes),
           }}
-          onClick={() => onEventClick(block.event.id)}
+          onClick={() => onEventClick(block.occurrence.eventId)}
         >
-          {block.event.title}
+          {block.occurrence.title}
         </button>
       ))}
     </div>
