@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clearTodoCompletions,
   formatDaysOfWeek,
   formatMinutes,
   resetExpiredTodos,
@@ -209,5 +210,30 @@ describe("resetExpiredTodos", () => {
       { id: "2", title: "新しい", completedAt: now - hour },
       { id: "3", title: "未完了" },
     ]);
+  });
+});
+
+describe("clearTodoCompletions", () => {
+  it("チェック済みと未チェックが混在しても全部から completedAt を消す", () => {
+    expect(
+      clearTodoCompletions([
+        { id: "1", title: "単語", completedAt: 1000 },
+        { id: "2", title: "音読" },
+        { id: "3", title: "宿題", completedAt: 2000 },
+      ]),
+    ).toEqual([
+      { id: "1", title: "単語" },
+      { id: "2", title: "音読" },
+      { id: "3", title: "宿題" },
+    ]);
+  });
+
+  it("空リストはそのまま返す", () => {
+    expect(clearTodoCompletions([])).toEqual([]);
+  });
+
+  it("id と title は保つ", () => {
+    const result = clearTodoCompletions([{ id: "keep", title: "残す", completedAt: 42 }]);
+    expect(result).toEqual([{ id: "keep", title: "残す" }]);
   });
 });

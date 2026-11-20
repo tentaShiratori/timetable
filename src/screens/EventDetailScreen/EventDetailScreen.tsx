@@ -1,4 +1,9 @@
-import { formatDaysOfWeek, formatMinutes, type EventTodo } from "../../components/Event/event";
+import {
+  clearTodoCompletions,
+  formatDaysOfWeek,
+  formatMinutes,
+  type EventTodo,
+} from "../../components/Event/event";
 import { useEvents } from "../../components/Event/useEvents";
 import { useRouter } from "../../components/Route/useRouter";
 import { editEventPath, parseDetailEventRoute } from "../EventEditScreen/eventRoute";
@@ -34,10 +39,15 @@ function EventDetailBody({ id }: { id: string }) {
 
   const current = event;
   const todos = current.todos ?? [];
+  const hasCompleted = todos.some((todo) => todo.completedAt !== undefined);
 
   function toggleTodo(todoId: string) {
     const nextTodos = todos.map((todo) => toggleCompleted(todo, todoId));
     updateEvent({ ...current, todos: nextTodos });
+  }
+
+  function resetTodoChecks() {
+    updateEvent({ ...current, todos: clearTodoCompletions(todos) });
   }
 
   return (
@@ -48,6 +58,16 @@ function EventDetailBody({ id }: { id: string }) {
       </p>
       {current.note ? <p className="event-detail-note">{current.note}</p> : null}
       <TodoChecklist todos={todos} onToggle={toggleTodo} />
+      {todos.length > 0 ? (
+        <button
+          type="button"
+          className="event-detail-reset-todos"
+          disabled={!hasCompleted}
+          onClick={resetTodoChecks}
+        >
+          チェックをリセット
+        </button>
+      ) : null}
       <div className="event-detail-actions">
         <button type="button" onClick={() => router.push(editEventPath(current.id))}>
           編集
