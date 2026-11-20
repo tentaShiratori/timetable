@@ -381,6 +381,20 @@ body {
   text-decoration: line-through;
 }
 
+.event-detail-reset-todos {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.event-detail-reset-todos:disabled {
+  opacity: 0.45;
+}
+
 .event-detail-actions {
   display: flex;
   flex-wrap: wrap;

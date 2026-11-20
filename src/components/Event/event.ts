@@ -212,6 +212,18 @@ export function resetExpiredTodos(todos: EventTodo[], now: number): EventTodo[] 
 /**
  * @public
  */
+export function clearTodoCompletions(todos: EventTodo[]): EventTodo[] {
+  return todos.map((todo) => {
+    if (todo.completedAt === undefined) {
+      return todo;
+    }
+    return { id: todo.id, title: todo.title };
+  });
+}
+
+/**
+ * @public
+ */
 export function toOccurrences(events: Event[]): Occurrence[] {
   return events.flatMap((event) =>
     event.daysOfWeek.map((dayOfWeek) => ({

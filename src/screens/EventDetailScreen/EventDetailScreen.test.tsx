@@ -89,4 +89,92 @@ describe("EventDetailScreen", () => {
     await user.click((await screen.findAllByRole("button", { name: "部活" }))[1]!);
     expect(await screen.findByRole("checkbox", { name: "シューズ" })).toBeChecked();
   });
+
+  it("チェックをリセットするとその予定の todo だけ全部外れる", async () => {
+    const user = userEvent.setup();
+    appFiles.set(
+      "events",
+      JSON.stringify([
+        {
+          id: "math",
+          title: "数学",
+          daysOfWeek: [1],
+          startMinutes: 9 * 60,
+          endMinutes: 10 * 60,
+          todos: [
+            { id: "t1", title: "宿題", completedAt: Date.now() - 60_000 },
+            { id: "t2", title: "復習" },
+          ],
+        },
+        {
+          id: "english",
+          title: "英語",
+          daysOfWeek: [2],
+          startMinutes: 10 * 60,
+          endMinutes: 11 * 60,
+          todos: [{ id: "e1", title: "単語", completedAt: Date.now() - 30_000 }],
+        },
+      ]),
+    );
+    renderApp(<App />);
+    await user.click(await screen.findByRole("button", { name: "数学" }));
+    expect(screen.getByRole("checkbox", { name: "宿題" })).toBeChecked();
+    await user.click(screen.getByRole("button", { name: "チェックをリセット" }));
+    expect(screen.getByRole("checkbox", { name: "宿題" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "復習" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "チェックをリセット" })).toBeDisabled();
+    await waitFor(() => {
+      const saved = JSON.parse(appFiles.get("events") ?? "[]") as Array<{
+        id: string;
+        todos?: Array<{ id: string; title: string; completedAt?: number }>;
+      }>;
+      expect(saved.find((event) => event.id === "math")?.todos).toEqual([
+        { id: "t1", title: "宿題" },
+        { id: "t2", title: "復習" },
+      ]);
+      expect(saved.find((event) => event.id === "english")?.todos?.[0]?.completedAt).toEqual(
+        expect.any(Number),
+      );
+    });
+  });
+
+  it("todo が0件のときはリセットボタンを出さない", async () => {
+    const user = userEvent.setup();
+    appFiles.set(
+      "events",
+      JSON.stringify([
+        {
+          id: "math",
+          title: "数学",
+          daysOfWeek: [1],
+          startMinutes: 9 * 60,
+          endMinutes: 10 * 60,
+        },
+      ]),
+    );
+    renderApp(<App />);
+    await user.click(await screen.findByRole("button", { name: "数学" }));
+    expect(await screen.findByText("やることはありません")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "チェックをリセット" })).not.toBeInTheDocument();
+  });
+
+  it("全部未チェックのときはリセットボタンが押せない", async () => {
+    const user = userEvent.setup();
+    appFiles.set(
+      "events",
+      JSON.stringify([
+        {
+          id: "math",
+          title: "数学",
+          daysOfWeek: [1],
+          startMinutes: 9 * 60,
+          endMinutes: 10 * 60,
+          todos: [{ id: "t1", title: "宿題" }],
+        },
+      ]),
+    );
+    renderApp(<App />);
+    await user.click(await screen.findByRole("button", { name: "数学" }));
+    expect(await screen.findByRole("button", { name: "チェックをリセット" })).toBeDisabled();
+  });
 });

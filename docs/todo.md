@@ -95,9 +95,10 @@ Kotlin は `src-tauri/gen/android/app/src/main/java/com/tenta/timetable/widget/`
 - [x] `resetExpiredTodos` で項目ごとに 24 時間経過分を未完了へ戻す
 - [x] 起動時とバックグラウンド復帰時に判定し、変化時だけ保存
 - [x] 詳細画面でチェック切り替え（その場で保存）
+- [x] 詳細画面の「チェックをリセット」（`clearTodoCompletions`、その場で保存）
 - [x] 編集画面で todo の追加・名前変更・削除（保存で確定、戻るで破棄）
 - [x] 予定 1 件で todo を共有（複数曜日でも同じ状態）
-- [x] ユニットテスト（`resetExpiredTodos` / `parseEvents` / `parseEventRoute`）
+- [x] ユニットテスト（`resetExpiredTodos` / `clearTodoCompletions` / `parseEvents` / `parseEventRoute`）
 
 ## 10. 複数曜日の予定
 
