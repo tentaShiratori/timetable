@@ -1,6 +1,7 @@
 import { useEvents } from "./components/Event/useEvents";
 import { useReminders } from "./components/Reminder/useReminders";
 import { Route } from "./components/Route/Route";
+import { EventDetailScreen } from "./screens/EventDetailScreen/EventDetailScreen";
 import { EventEditScreen } from "./screens/EventEditScreen/EventEditScreen";
 import { WeekScreen } from "./screens/WeekScreen/WeekScreen";
 import "./App.css";
@@ -22,6 +23,7 @@ function App() {
       <Route path="/">
         <WeekScreen />
       </Route>
+      <EventDetailScreen />
       <EventEditScreen />
     </main>
   );

@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { atom, useAtom } from "jotai";
 import { useEffect } from "react";
-import { parseEvents, type Event } from "./event";
+import { parseEvents, resetExpiredTodos, type Event } from "./event";
 
 const EVENTS_KIND = "events";
 
@@ -30,6 +30,24 @@ async function saveEventsFile(events: Event[]): Promise<void> {
   }
 }
 
+function applyTodoResets(events: Event[], now: number): { events: Event[]; changed: boolean } {
+  let changed = false;
+  const next = events.map((event) => {
+    const todos = event.todos;
+    if (!todos || todos.length === 0) {
+      return event;
+    }
+    const reset = resetExpiredTodos(todos, now);
+    const same = reset.every((todo, index) => todo.completedAt === todos[index]?.completedAt);
+    if (same) {
+      return event;
+    }
+    changed = true;
+    return { ...event, todos: reset };
+  });
+  return { events: next, changed };
+}
+
 type UseEvents = {
   events: Event[];
   ready: boolean;
@@ -55,13 +73,40 @@ export function useEvents(): UseEvents {
       if (cancelled) {
         return;
       }
-      setEvents(data);
+      const { events: next, changed } = applyTodoResets(data, Date.now());
+      setEvents(next);
       setReady(true);
+      if (changed) {
+        void saveEventsFile(next);
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [ready, setEvents, setReady]);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      setEvents((current) => {
+        const { events: next, changed } = applyTodoResets(current, Date.now());
+        if (!changed) {
+          return current;
+        }
+        void saveEventsFile(next);
+        return next;
+      });
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [ready, setEvents]);
 
   return {
     events,

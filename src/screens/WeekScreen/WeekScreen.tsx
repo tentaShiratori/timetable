@@ -1,6 +1,6 @@
 import { useEvents } from "../../components/Event/useEvents";
 import { useRouter } from "../../components/Route/useRouter";
-import { editEventPath, newEventPath } from "../EventEditScreen/eventRoute";
+import { detailEventPath, newEventPath } from "../EventEditScreen/eventRoute";
 import { WeekGrid } from "./WeekGrid";
 
 /**
@@ -19,7 +19,7 @@ export function WeekScreen() {
           router.push(newEventPath(dayOfWeek, startMinutes));
         }}
         onEventClick={(id) => {
-          router.push(editEventPath(id));
+          router.push(detailEventPath(id));
         }}
       />
     </section>
